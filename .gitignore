@@ -1,0 +1,27 @@
+# --- Segredos ---
+# Tudo que é .env fica fora do git. A exceção é .env.example, que só tem
+# nomes de variáveis e serve de documentação.
+.env
+.env.*
+!.env.example
+
+# --- Dependências e build ---
+node_modules/
+.next/
+out/
+build/
+dist/
+
+# --- Vercel ---
+.vercel
+
+# --- Ferramentas ---
+*.tsbuildinfo
+next-env.d.ts
+coverage/
+.turbo/
+
+# --- Sistema ---
+.DS_Store
+Thumbs.db
+*.log
