@@ -1,0 +1,107 @@
+@import "tailwindcss";
+
+/**
+ * Design tokens — MX Seguros.
+ * Hex oficiais de logos/PaletaCores.png.
+ */
+@theme {
+  /* Marca */
+  --color-navy: #071B34;
+  --color-navy-2: #0D2947;
+  --color-sky: #CAE3F7;
+  --color-sage: #B0AF94;
+  --color-graphite: #484848;
+  --color-mist: #DFDFDF;
+  --color-paper: #FFFDFB;
+
+  /* O sage não tem contraste para texto sobre fundo claro (1,9:1).
+     Esta variante escurecida passa AA e é usada em qualquer texto de acento. */
+  --color-sage-ink: #5F5E46;
+
+  /* Exclusivo do CTA de WhatsApp — não é cor de marca */
+  --color-whats: #25D366;
+}
+
+:root {
+  --bg: #FFFDFB;
+  --surface: #FFFFFF;
+  --surface-2: #F3F2EE;
+  --ink: #12202F;
+  --ink-mid: #4A5460;
+  --ink-faint: #7C8590;
+  --rule: #E2E1DA;
+  --accent: #5F5E46;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #060F1B;
+    --surface: #0C1B2C;
+    --surface-2: #122438;
+    --ink: #E7E9E5;
+    --ink-mid: #A3AEBB;
+    --ink-faint: #6F7C8B;
+    --rule: #1D3149;
+    --accent: #B0AF94;
+  }
+}
+
+/* O toggle do usuário precisa vencer a media query nos dois sentidos. */
+:root[data-theme="dark"] {
+  --bg: #060F1B;
+  --surface: #0C1B2C;
+  --surface-2: #122438;
+  --ink: #E7E9E5;
+  --ink-mid: #A3AEBB;
+  --ink-faint: #6F7C8B;
+  --rule: #1D3149;
+  --accent: #B0AF94;
+}
+:root[data-theme="light"] {
+  --bg: #FFFDFB;
+  --surface: #FFFFFF;
+  --surface-2: #F3F2EE;
+  --ink: #12202F;
+  --ink-mid: #4A5460;
+  --ink-faint: #7C8590;
+  --rule: #E2E1DA;
+  --accent: #5F5E46;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-mid: var(--ink-mid);
+  --color-ink-faint: var(--ink-faint);
+  --color-rule: var(--rule);
+  --color-accent: var(--accent);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display-face);
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display-face), Georgia, serif;
+  text-wrap: balance;
+}
+
+:focus-visible {
+  outline: 2px solid #B0AF94;
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

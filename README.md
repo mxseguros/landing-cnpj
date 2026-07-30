@@ -18,21 +18,38 @@ A célula B2B da corretora tem duas pessoas — um *hunter* e um *closer* — pa
 
 ## Estado atual
 
-**Fase 0** — fundação. O agente está escrito e com typecheck limpo; o app Next.js ainda não foi inicializado.
+**Fase 2** — app no ar localmente. Next.js 16 + React 19 + Tailwind v4, três landing pages geradas estaticamente e o agente ligado ao chat.
 
-```
-lib/agent/prompt.ts     system prompt e guardrails (traduz o documento da persona)
-lib/agent/schema.ts     schema Zod do lead
-lib/agent/score.ts      motor A/B/C + flag conta_tecnica — determinístico, roda em código
-lib/agent/tools.ts      salvarQualificacao · solicitarContatoHumano · encerrarConversa
-lib/agent/evals.ts      10 casos de score + 12 de conversa
-lib/leads/sink.ts       deliverLead() — ponto único de saída do lead
-app/api/chat/route.ts   endpoint de streaming (runtime Node.js)
-prototipo/index.html    protótipo navegável das landing pages
-logos/                  identidade visual da MX
+```bash
+npm install
+cp .env.example .env.local   # preencha ANTHROPIC_API_KEY
+npm run dev                  # http://localhost:3000 → /empresas
 ```
 
-**Decisão de arquitetura que vale conhecer antes de mexer:** a pontuação do lead roda em `score.ts`, não no modelo. A IA coleta; a regra decide. Um LLM atribuindo score é inauditável e muda de resposta entre execuções, o que impede calibrar o roteamento com o feedback do closer.
+| Rota | O que é |
+|---|---|
+| `/` | Redireciona para `/empresas` |
+| `/empresas` · `/condominio` · `/frota` | Landing pages (SSG, revalidação diária) |
+| `/api/chat` | Endpoint do agente, streaming, runtime Node.js |
+
+```
+lib/segments/config.ts      copy, cenários, coberturas e metadata por segmento
+lib/agent/prompt.ts         system prompt e guardrails (traduz o doc da persona)
+lib/agent/schema.ts         schema Zod do lead
+lib/agent/score.ts          motor A/B/C + flag conta_tecnica — determinístico
+lib/agent/tools.ts          salvarQualificacao · solicitarContatoHumano · encerrarConversa
+lib/agent/evals.ts          10 casos de score + 12 de conversa
+lib/leads/sink.ts           deliverLead() — ponto único de saída do lead
+app/[segmento]/page.tsx     template único; não conhece nenhum segmento pelo nome
+components/chat/            widget de qualificação (único componente client)
+prototipo/index.html        protótipo estático original, mantido como referência
+```
+
+**Duas decisões que vale conhecer antes de mexer:**
+
+A pontuação do lead roda em `score.ts`, não no modelo. A IA coleta; a regra decide. Um LLM atribuindo score é inauditável e muda de resposta entre execuções, o que impede calibrar o roteamento com o feedback do closer.
+
+Adicionar um segmento é acrescentar uma entrada em `lib/segments/config.ts` e a chave correspondente em `segmentoEnum` e `FOCO_POR_SEGMENTO`. Nenhum componente muda.
 
 ## Configuração
 
