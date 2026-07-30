@@ -12,6 +12,13 @@ import { origemSchema, segmentoEnum } from '@/lib/agent/schema';
 export const maxDuration = 60;
 
 export async function POST(req: Request) {
+  // Falha cedo e explícita: sem isso o erro só aparece lá dentro do agente,
+  // como um 401 genérico que não diz que a variável simplesmente não existe.
+  if (!process.env.ANTHROPIC_API_KEY) {
+    console.error('[chat] ANTHROPIC_API_KEY ausente — configure em `vercel env add`');
+    return Response.json({ erro: 'agente indisponível' }, { status: 503 });
+  }
+
   const body = await req.json();
 
   const parseSegmento = segmentoEnum.safeParse(body.segmento);
@@ -36,16 +43,27 @@ export async function POST(req: Request) {
     paginaSegmento: parseSegmento.data,
   });
 
-  const conversaId = typeof body.conversaId === 'string' ? body.conversaId : novoProtocolo();
+  // O protocolo nasce no cliente e acompanha a conversa inteira. Se fosse
+  // gerado aqui, cada mensagem do visitante viraria um protocolo diferente —
+  // e `deliverLead` criaria um lead novo por turno em vez de um por conversa.
+  const conversaId =
+    typeof body.conversaId === 'string' && /^MX-[A-Z0-9]{6}$/.test(body.conversaId)
+      ? body.conversaId
+      : null;
+  if (!conversaId) {
+    return Response.json({ erro: 'conversaId ausente ou inválido' }, { status: 400 });
+  }
 
   const agente = criarAgente(parseSegmento.data, { conversaId, origem });
 
   return createAgentUIStreamResponse({
     agent: agente,
     uiMessages: messages,
+    onError: (erro) => {
+      // O texto que chega ao visitante é genérico de propósito; o erro real
+      // precisa ficar no log, senão não há como diagnosticar em produção.
+      console.error('[chat]', conversaId, parseSegmento.data, erro);
+      return 'Não consegui responder agora.';
+    },
   });
-}
-
-function novoProtocolo(): string {
-  return 'MX-' + Math.random().toString(36).slice(2, 8).toUpperCase();
 }

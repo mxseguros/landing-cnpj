@@ -104,6 +104,13 @@ export function pontuar(lead: Lead): Resultado {
     return { score: 'B', contaTecnica, motivos };
   }
 
-  motivos.push('Sem urgência, ramo ou decisor que justifiquem prioridade');
+  // Enumera o que realmente falta. Um motivo genérico faria o closer
+  // descartar lead que só está incompleto — o formulário, por exemplo, não
+  // pergunta quem decide, mas pode trazer vencimento para o mês que vem.
+  const faltando: string[] = [];
+  if (!decisor) faltando.push('quem decide não identificado');
+  if (!temFase1 && !fases.includes(2)) faltando.push('ramo de interesse não informado');
+  if (!vencimentoUrgente(lead) && !gatilhoQuente(lead)) faltando.push('sem urgência declarada');
+  motivos.push(faltando.length ? `Falta: ${faltando.join('; ')}` : 'Sem sinal de prioridade');
   return { score: 'C', contaTecnica, motivos };
 }

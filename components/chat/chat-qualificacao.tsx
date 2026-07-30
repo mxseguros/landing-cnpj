@@ -13,9 +13,23 @@ import { MX_SITE } from '@/lib/segments/config';
  * Nenhuma regra de qualificação vive no cliente: quem decide o que perguntar
  * é o system prompt, e quem pontua é `lib/agent/score.ts` no servidor.
  */
+function novoProtocolo(): string {
+  const a = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let s = '';
+  for (let i = 0; i < 6; i++) s += a[Math.floor(Math.random() * a.length)];
+  return 'MX-' + s;
+}
+
 export function ChatQualificacao({ segmento }: { segmento: Segmento }) {
   const [origem, setOrigem] = useState<Record<string, string>>({});
   const logRef = useRef<HTMLDivElement>(null);
+
+  /**
+   * Um protocolo por visitante, criado uma vez e mantido por toda a conversa.
+   * Se cada requisição gerasse o seu, o mesmo diálogo viraria vários leads
+   * distintos no CRM — um por mensagem enviada.
+   */
+  const [conversaId] = useState(novoProtocolo);
 
   // UTMs vêm da URL, nunca do usuário — sem isso não há como medir o Google Ads.
   useEffect(() => {
@@ -35,7 +49,7 @@ export function ChatQualificacao({ segmento }: { segmento: Segmento }) {
   const { messages, sendMessage, status, error } = useChat({
     transport: new DefaultChatTransport({
       api: '/api/chat',
-      body: { segmento, origem },
+      body: { segmento, origem, conversaId },
     }),
   });
 
@@ -56,7 +70,7 @@ export function ChatQualificacao({ segmento }: { segmento: Segmento }) {
   const vazio = messages.length === 0;
 
   return (
-    <div className="flex min-h-[498px] flex-col overflow-hidden rounded-2xl border border-rule bg-surface shadow-[0_24px_60px_-28px_rgba(0,0,0,.45)]">
+    <div className="flex flex-col overflow-hidden rounded-2xl border border-rule bg-surface shadow-[0_24px_60px_-28px_rgba(0,0,0,.45)] lg:min-h-[498px]">
       <header className="flex items-center gap-3 border-b border-rule bg-surface-2 px-4 py-3">
         <span className="relative grid size-9 shrink-0 place-items-center rounded-full bg-navy">
           <span className="font-display text-sm font-semibold text-white">MX</span>
@@ -70,13 +84,21 @@ export function ChatQualificacao({ segmento }: { segmento: Segmento }) {
         </div>
       </header>
 
-      <div ref={logRef} className="flex max-h-[352px] flex-1 flex-col gap-3 overflow-y-auto p-4">
+      <div ref={logRef} className="flex max-h-[42vh] min-h-[168px] flex-1 flex-col gap-3 overflow-y-auto p-4 lg:max-h-[352px]">
         {vazio && (
-          <div className="m-auto max-w-xs text-center text-sm text-ink-faint">
-            <p>
+          <div className="my-auto text-center">
+            <p className="text-sm text-ink-mid">
               Seis perguntas rápidas e um corretor da MX assume, já sabendo do que você
-              precisa. Sem cadastro para começar.
+              precisa.
             </p>
+            <button
+              type="button"
+              onClick={() => enviar('Olá! Quero entender o que preciso proteger.')}
+              className="mt-4 min-h-11 rounded-lg bg-navy px-4 text-sm font-semibold text-white"
+            >
+              Começar agora
+            </button>
+            <p className="mt-2.5 text-xs text-ink-faint">Sem cadastro para começar</p>
           </div>
         )}
 

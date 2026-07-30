@@ -18,14 +18,21 @@ export interface Entrega {
   escapeHumano?: string;
   /** Conversa abandonada antes de completar — entrega o que houver. */
   parcial?: boolean;
+  /**
+   * Veio do formulário, não do chat. Quem preenche está pedindo contato de
+   * forma explícita, então a notificação não passa pelo filtro de score:
+   * um lead C do formulário ainda é alguém esperando o telefone tocar.
+   */
+  viaFormulario?: boolean;
 }
 
 export async function deliverLead(e: Entrega): Promise<void> {
   // 1. Fonte de verdade
   await persistir(e);
 
-  // 2. Notificação ao corretor. Score C não interrompe ninguém — fica registrado.
-  if (e.resultado.score !== 'C' || e.escapeHumano) {
+  // 2. Notificação ao corretor. Score C não interrompe ninguém — fica apenas
+  // registrado —, exceto quando a pessoa pediu contato de forma explícita.
+  if (e.resultado.score !== 'C' || e.escapeHumano || e.viaFormulario) {
     await notificarCelula(e);
   }
 }

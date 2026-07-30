@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { SEGMENTOS, SLUGS, ehSegmento, MX_SITE, SEGURADORAS } from '@/lib/segments/config';
 import { ChatQualificacao } from '@/components/chat/chat-qualificacao';
+import { FormularioFallback } from '@/components/chat/formulario-fallback';
 
 type Props = { params: Promise<{ segmento: string }> };
 
@@ -70,6 +71,17 @@ export default async function PaginaSegmento({ params }: Props) {
             </a>
             <span className="text-[0.66rem] text-[#A8B2BF]">Gente de verdade, {MX_SITE.horario}</span>
           </div>
+          {/* No mobile o header só tinha o logo: quem queria ligar precisava
+              rolar a página inteira até o rodapé. */}
+          <a
+            href={`tel:${MX_SITE.telefoneLink}`}
+            className="ml-auto inline-flex min-h-11 items-center gap-2 rounded-lg border border-sage/40 px-3 text-sm font-semibold text-sage lg:hidden"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="size-4" aria-hidden>
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z" />
+            </svg>
+            Ligar
+          </a>
         </div>
       </header>
 
@@ -88,18 +100,18 @@ export default async function PaginaSegmento({ params }: Props) {
             aria-hidden
             className="absolute inset-0 bg-[linear-gradient(95deg,rgba(7,27,52,.97)_0%,rgba(7,27,52,.93)_32%,rgba(7,27,52,.7)_58%,rgba(7,27,52,.4)_100%)] max-md:bg-[linear-gradient(to_top,rgba(7,27,52,.97)_12%,rgba(7,27,52,.88)_55%,rgba(7,27,52,.72)_100%)]"
           />
-          <div className="relative mx-auto grid max-w-6xl gap-10 px-5 py-16 lg:grid-cols-[1.02fr_.98fr] lg:items-center lg:py-20">
+          <div className="relative mx-auto grid max-w-6xl gap-7 px-5 py-9 lg:grid-cols-[1.02fr_.98fr] lg:items-center lg:gap-10 lg:py-20">
             <div className="max-w-[58ch] text-[#EDEDE6]">
               <span className="inline-flex items-center gap-2 rounded-full border border-[#D98324]/45 bg-[#D98324]/15 px-3 py-1.5 font-mono text-[0.68rem] tracking-[0.1em] text-[#F0B372] uppercase">
                 <span className="size-1.5 rounded-full bg-[#D98324]" />
                 {c.urgencia}
               </span>
-              <h1 className="mt-5 text-[clamp(2.15rem,1.15rem+3.4vw,3.5rem)] leading-[1.12] font-semibold">
+              <h1 className="mt-4 text-[clamp(1.85rem,1.15rem+3.4vw,3.5rem)] leading-[1.1] font-semibold">
                 {c.titulo}
               </h1>
-              <p className="mt-4 max-w-[52ch] text-lg text-[#C6CFDA]">{c.subtitulo}</p>
+              <p className="mt-3 max-w-[52ch] text-[0.98rem] text-[#C6CFDA] lg:text-lg">{c.subtitulo}</p>
               <Prazo />
-              <ul className="mt-8 flex flex-wrap gap-2 border-t border-sage/20 pt-6">
+              <ul className="mt-6 hidden flex-wrap gap-2 border-t border-sage/20 pt-5 lg:flex">
                 {[
                   ['No mercado desde', String(MX_SITE.desde)],
                   ['Cotamos em', `${SEGURADORAS.length} seguradoras`],
@@ -263,6 +275,29 @@ export default async function PaginaSegmento({ params }: Props) {
             </div>
           </div>
         </section>
+        {/* ---------- FALLBACK ---------- */}
+        <section className="border-t border-sage/20 bg-navy py-16 text-[#EDEDE6] md:py-24">
+          <div className="mx-auto grid max-w-6xl gap-9 px-5 lg:grid-cols-2 lg:items-start">
+            <div>
+              <Cabecalho
+                eyebrow="Prefere não conversar agora?"
+                titulo="Deixe seus dados que um corretor procura você"
+                lede="Nem todo mundo quer responder perguntas na tela — e tudo bem. Este formulário chega no mesmo lugar que a conversa, só sem a qualificação pronta."
+                escuro
+              />
+              <p className="text-[0.9rem] text-[#A8B2BF]">
+                Ou ligue direto:{' '}
+                <a
+                  href={`tel:${MX_SITE.telefoneLink}`}
+                  className="inline-flex min-h-11 items-center font-semibold text-sage"
+                >
+                  {MX_SITE.telefone}
+                </a>
+              </p>
+            </div>
+            <FormularioFallback segmento={c.slug} />
+          </div>
+        </section>
       </main>
 
       <Rodape />
@@ -323,8 +358,13 @@ function Rodape() {
           <div className="text-[0.86rem]">
             <h3 className="mb-2 font-mono text-[0.64rem] tracking-[0.13em] text-sage uppercase">Contato</h3>
             <address className="leading-relaxed not-italic">
-              <a href={`tel:${MX_SITE.telefoneLink}`}>{MX_SITE.telefone}</a><br />
-              <a href={`mailto:${MX_SITE.email}`} className="break-all">{MX_SITE.email}</a>
+              <a href={`tel:${MX_SITE.telefoneLink}`} className="inline-flex min-h-11 items-center">
+                {MX_SITE.telefone}
+              </a>
+              <br />
+              <a href={`mailto:${MX_SITE.email}`} className="inline-flex min-h-11 items-center break-all">
+                {MX_SITE.email}
+              </a>
             </address>
           </div>
         </div>
