@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Inter, Fraunces } from 'next/font/google';
+import { urlBase, ehProducaoReal } from '@/lib/site';
 import './globals.css';
 
 const body = Inter({
@@ -20,7 +21,7 @@ const display = Fraunces({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://mxseguros.com.br'),
+  metadataBase: new URL(urlBase()),
   title: {
     default: 'MX Seguros — Seguro empresarial em Itapira',
     template: '%s',
@@ -28,7 +29,10 @@ export const metadata: Metadata = {
   description:
     'Corretora de seguros de Itapira desde 2002. Seguro empresarial, condominial e de frota com cotação em várias seguradoras e atendimento presencial.',
   openGraph: { type: 'website', locale: 'pt_BR', siteName: 'MX Seguros' },
-  robots: { index: true, follow: true },
+  // Fora do domínio real, nenhum buscador deve indexar (ver lib/site.ts).
+  robots: ehProducaoReal()
+    ? { index: true, follow: true }
+    : { index: false, follow: false },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
