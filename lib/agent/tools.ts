@@ -16,12 +16,29 @@ export function criarTools(ctx: { conversaId: string; origem: Origem }) {
   /** Acumula o que o agente descobriu ao longo da conversa. */
   let acumulado: Lead = {};
 
+  /**
+   * O agente chama `salvarQualificacao` várias vezes por conversa, refinando o
+   * que sabe. Sem esta trava, toda chamada posterior ao essencial dispararia um
+   * `deliverLead` novo — o corretor receberia o mesmo lead duas ou três vezes,
+   * cada uma com um score possivelmente diferente, conforme o que o modelo
+   * tivesse capturado naquele instante.
+   *
+   * Cobre as chamadas dentro de uma mesma requisição. Entre requisições a
+   * instância é nova, então a deduplicação definitiva depende de `deliverLead`
+   * fazer upsert por `conversaId` quando o Postgres entrar (Fase 4).
+   */
+  let jaEncaminhado = false;
+
   return {
     salvarQualificacao: tool({
       description:
         'Registra o que você já descobriu sobre o cliente. Pode ser chamada várias vezes conforme ' +
         'a conversa avança — mande só os campos novos. Quando houver o essencial (o que proteger, ' +
-        'situação atual e contato), o lead é encaminhado automaticamente ao corretor.',
+        'situação atual e contato), o lead é encaminhado automaticamente ao corretor. ' +
+        'Sempre que a pessoa disser quem decide a contratação, preencha `papel` e `decideSozinho`: ' +
+        'sem isso o lead é roteado como se ninguém com poder de decisão tivesse falado, e perde ' +
+        'prioridade na fila do corretor. Em `ramos`, liste só o que a pessoa realmente pediu — ' +
+        'incluir ramo que ela não mencionou muda a classificação do lead.',
       inputSchema: leadSchema,
       execute: async (parcial) => {
         acumulado = { ...acumulado, ...parcial };
@@ -36,12 +53,15 @@ export function criarTools(ctx: { conversaId: string; origem: Origem }) {
         }
 
         const resultado = pontuar(acumulado);
-        await deliverLead({
-          lead: acumulado,
-          resultado,
-          origem: ctx.origem,
-          conversaId: ctx.conversaId,
-        });
+        if (!jaEncaminhado) {
+          jaEncaminhado = true;
+          await deliverLead({
+            lead: acumulado,
+            resultado,
+            origem: ctx.origem,
+            conversaId: ctx.conversaId,
+          });
+        }
 
         return {
           registrado: true,
