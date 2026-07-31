@@ -1,10 +1,28 @@
 import type { Metadata } from 'next';
+import type { Segmento } from '@/lib/agent/schema';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { SEGMENTOS, SLUGS, ehSegmento, MX_SITE, SEGURADORAS } from '@/lib/segments/config';
 import { ChatQualificacao } from '@/components/chat/chat-qualificacao';
 import { FormularioFallback } from '@/components/chat/formulario-fallback';
+import { AlternadorTema } from '@/components/alternador-tema';
+
+/** Menu igual ao do protótipo: âncoras das seções da própria página. */
+const SECOES: [string, string][] = [
+  ['#conversa', 'Conversar'],
+  ['#cenario', 'Cenário'],
+  ['#como', 'Como funciona'],
+  ['#coberturas', 'Coberturas'],
+  ['#duvidas', 'Dúvidas'],
+];
+
+/** Abre o WhatsApp da MX já dizendo de qual página o visitante veio. */
+function linkWhatsApp(deOndeVeio: string): string {
+  const texto = `Olá! Vim pela página de ${deOndeVeio} do site e queria falar sobre seguro para a minha empresa.`;
+  const numero = MX_SITE.telefoneLink.replace(/[^0-9]/g, '');
+  return `https://wa.me/${numero}?text=${encodeURIComponent(texto)}`;
+}
 
 type Props = { params: Promise<{ segmento: string }> };
 
@@ -45,49 +63,48 @@ export default async function PaginaSegmento({ params }: Props) {
       />
 
       <header className="sticky top-0 z-50 border-b border-white/10 bg-navy">
-        <div className="mx-auto flex h-[70px] max-w-6xl items-center gap-6 px-5">
-          <Link href="/" className="shrink-0">
-            <Image src="/logo-sage.png" alt="MX Corretora de Seguros" width={430} height={72} className="h-7 w-auto" priority />
+        {/* Espaçamento apertado no mobile de propósito: logo + WhatsApp +
+            alternador não cabem em 390px com o gap do desktop. */}
+        <div className="mx-auto flex h-[70px] max-w-6xl items-center gap-3 px-4 lg:gap-5 lg:px-5">
+          <Link href={`/${segmento}`} className="shrink-0">
+            <Image src="/logo-sage.png" alt="MX Corretora de Seguros" width={430} height={72} className="h-6 w-auto lg:h-7" priority />
           </Link>
+
           <nav className="ml-auto hidden gap-6 lg:flex">
-            {SLUGS.map((s) => (
-              <Link
-                key={s}
-                href={`/${s}`}
-                aria-current={s === segmento ? 'page' : undefined}
-                className={`border-b py-1 text-sm transition ${
-                  s === segmento
-                    ? 'border-sage text-sage'
-                    : 'border-transparent text-[#A8B2BF] hover:border-sage hover:text-sage'
-                }`}
+            {SECOES.map(([href, rotulo]) => (
+              <a
+                key={href}
+                href={href}
+                className="border-b border-transparent py-1 text-sm text-[#A8B2BF] transition hover:border-sage hover:text-sage"
               >
-                {SEGMENTOS[s].nav}
-              </Link>
+                {rotulo}
+              </a>
             ))}
           </nav>
-          <div className="ml-auto hidden text-right leading-tight lg:ml-0 lg:block">
-            <a href={`tel:${MX_SITE.telefoneLink}`} className="block text-sm font-semibold text-sage">
-              {MX_SITE.telefone}
-            </a>
-            <span className="text-[0.66rem] text-[#A8B2BF]">Gente de verdade, {MX_SITE.horario}</span>
-          </div>
-          {/* No mobile o header só tinha o logo: quem queria ligar precisava
-              rolar a página inteira até o rodapé. */}
-          <a
-            href={`tel:${MX_SITE.telefoneLink}`}
-            className="ml-auto inline-flex min-h-11 items-center gap-2 rounded-lg border border-sage/40 px-3 text-sm font-semibold text-sage lg:hidden"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="size-4" aria-hidden>
-              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z" />
-            </svg>
-            Ligar
+
+          <a href={`tel:${MX_SITE.telefoneLink}`} className="hidden text-sm font-semibold text-sage lg:block">
+            {MX_SITE.telefone}
           </a>
+
+          <a
+            href={linkWhatsApp(SEGMENTOS[segmento].nav)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="ml-auto inline-flex min-h-11 items-center gap-2 rounded-lg bg-whats px-3.5 text-sm font-semibold text-[#04231A] lg:ml-0"
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor" className="size-[18px]" aria-hidden>
+              <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91C21.96 6.45 17.5 2 12.04 2zm5.8 14.09c-.25.69-1.42 1.31-1.97 1.4-.5.07-1.14.1-1.84-.12-.42-.13-.97-.31-1.67-.61-2.94-1.27-4.86-4.23-5-4.43-.15-.2-1.2-1.59-1.2-3.03s.76-2.15 1.03-2.44c.27-.3.59-.37.79-.37h.57c.18 0 .43-.07.67.51.25.6.84 2.06.91 2.21.07.15.12.32.02.52-.1.2-.15.32-.3.5l-.44.51c-.15.15-.3.31-.13.61.17.3.76 1.25 1.63 2.03 1.12 1 2.06 1.31 2.36 1.46.3.15.47.13.64-.08.17-.2.74-.86.94-1.16.2-.3.4-.25.67-.15.27.1 1.72.81 2.01.96.3.15.5.22.57.35.07.13.07.74-.18 1.43z" />
+            </svg>
+            WhatsApp
+          </a>
+
+          <AlternadorTema />
         </div>
       </header>
 
       <main>
         {/* ---------- HERO ---------- */}
-        <section className="relative isolate overflow-hidden bg-navy">
+        <section id="conversa" className="relative isolate overflow-hidden bg-navy">
           <Image
             src={c.foto}
             alt={c.fotoAlt}
@@ -156,7 +173,7 @@ export default async function PaginaSegmento({ params }: Props) {
         </div>
 
         {/* ---------- CENÁRIOS ---------- */}
-        <section className="border-b border-rule bg-surface-2 py-16 md:py-24">
+        <section id="cenario" className="border-b border-rule bg-surface-2 py-16 md:py-24">
           <div className="mx-auto max-w-6xl px-5">
             <Cabecalho eyebrow="O cenário" titulo={c.cenariosTitulo} lede={c.cenariosLede} />
             <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -185,7 +202,7 @@ export default async function PaginaSegmento({ params }: Props) {
         </section>
 
         {/* ---------- COMO FUNCIONA ---------- */}
-        <section className="bg-navy py-16 text-[#EDEDE6] md:py-24">
+        <section id="como" className="bg-navy py-16 text-[#EDEDE6] md:py-24">
           <div className="mx-auto max-w-6xl px-5">
             <Cabecalho
               eyebrow="Como funciona"
@@ -211,7 +228,7 @@ export default async function PaginaSegmento({ params }: Props) {
         </section>
 
         {/* ---------- COBERTURAS ---------- */}
-        <section className="py-16 md:py-24">
+        <section id="coberturas" className="py-16 md:py-24">
           <div className="mx-auto max-w-6xl px-5">
             <Cabecalho
               eyebrow="Coberturas"
@@ -256,7 +273,7 @@ export default async function PaginaSegmento({ params }: Props) {
         </section>
 
         {/* ---------- FAQ ---------- */}
-        <section className="py-16 md:py-24">
+        <section id="duvidas" className="py-16 md:py-24">
           <div className="mx-auto max-w-6xl px-5">
             <Cabecalho eyebrow="Dúvidas" titulo="O que costumam perguntar antes de começar" />
             <div className="flex max-w-3xl flex-col gap-2">
@@ -300,7 +317,7 @@ export default async function PaginaSegmento({ params }: Props) {
         </section>
       </main>
 
-      <Rodape />
+      <Rodape segmentoAtual={c.slug} />
     </>
   );
 }
@@ -332,13 +349,30 @@ function Cabecalho({
   );
 }
 
-function Rodape() {
+function Rodape({ segmentoAtual }: { segmentoAtual: Segmento }) {
   return (
     <footer className="border-t border-sage/20 bg-navy py-12 text-[#A8B2BF]">
       <div className="mx-auto max-w-6xl px-5">
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <Image src="/logo-white.png" alt="MX Corretora de Seguros, desde 2002" width={180} height={180} className="size-20" />
+            {/* O menu do topo virou âncoras da própria página, então a
+                navegação entre segmentos passa a viver aqui. */}
+            <ul className="mt-5 flex flex-col text-[0.86rem]">
+              {SLUGS.map((s) => (
+                <li key={s}>
+                  <Link
+                    href={`/${s}`}
+                    aria-current={s === segmentoAtual ? 'page' : undefined}
+                    className={`inline-flex min-h-11 items-center transition hover:text-sage ${
+                      s === segmentoAtual ? 'font-semibold text-sage' : ''
+                    }`}
+                  >
+                    {SEGMENTOS[s].nav}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </div>
           <div className="text-[0.86rem]">
             <h3 className="mb-2 font-mono text-[0.64rem] tracking-[0.13em] text-sage uppercase">Matriz</h3>

@@ -74,7 +74,7 @@ export function ChatQualificacao({ segmento }: { segmento: Segmento }) {
       <header className="flex items-center gap-3 border-b border-rule bg-surface-2 px-4 py-3">
         <span className="relative grid size-9 shrink-0 place-items-center rounded-full bg-navy">
           <span className="font-display text-sm font-semibold text-white">MX</span>
-          <span className="absolute -right-px -bottom-px size-2.5 rounded-full border-2 border-surface-2 bg-[--color-whats]" />
+          <span className="absolute -right-px -bottom-px size-2.5 rounded-full border-2 border-surface-2 bg-whats" />
         </span>
         <div className="leading-tight">
           <p className="text-sm font-semibold">MX Empresas</p>

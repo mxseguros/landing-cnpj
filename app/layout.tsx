@@ -37,7 +37,18 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR" className={`${body.variable} ${display.variable}`}>
+    <html lang="pt-BR" className={`${body.variable} ${display.variable}`} suppressHydrationWarning>
+      <head>
+        {/*
+          Aplica o tema salvo antes da primeira pintura. Sem isto a página
+          abriria no tema do sistema e piscaria ao trocar na hidratação.
+        */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var t=localStorage.getItem('mx-tema');if(t)document.documentElement.dataset.theme=t}catch(e){}`,
+          }}
+        />
+      </head>
       <body className="font-sans antialiased">{children}</body>
     </html>
   );
