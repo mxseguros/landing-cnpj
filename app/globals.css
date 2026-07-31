@@ -98,6 +98,12 @@ h1, h2, h3 {
   border-radius: 2px;
 }
 
+/* Barrinha de progresso do fundo ativo do hero — components/hero-fundo.tsx. */
+@keyframes mx-preenche {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

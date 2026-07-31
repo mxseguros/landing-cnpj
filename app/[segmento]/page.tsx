@@ -3,7 +3,8 @@ import type { Segmento } from '@/lib/agent/schema';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { SEGMENTOS, SLUGS, ehSegmento, MX_SITE, SEGURADORAS } from '@/lib/segments/config';
+import { SEGMENTOS, SLUGS, ehSegmento, fundosHero, MX_SITE, SEGURADORAS } from '@/lib/segments/config';
+import { HeroFundo, ControlesFundo } from '@/components/hero-fundo';
 import { ChatQualificacao } from '@/components/chat/chat-qualificacao';
 import { FormularioFallback } from '@/components/chat/formulario-fallback';
 import { AlternadorTema } from '@/components/alternador-tema';
@@ -105,46 +106,37 @@ export default async function PaginaSegmento({ params }: Props) {
       <main>
         {/* ---------- HERO ---------- */}
         <section id="conversa" className="relative isolate overflow-hidden bg-navy">
-          <Image
-            src={c.foto}
-            alt={c.fotoAlt}
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover object-[center_45%]"
-          />
-          <div
-            aria-hidden
-            className="absolute inset-0 bg-[linear-gradient(95deg,rgba(7,27,52,.97)_0%,rgba(7,27,52,.93)_32%,rgba(7,27,52,.7)_58%,rgba(7,27,52,.4)_100%)] max-md:bg-[linear-gradient(to_top,rgba(7,27,52,.97)_12%,rgba(7,27,52,.88)_55%,rgba(7,27,52,.72)_100%)]"
-          />
-          <div className="relative mx-auto grid max-w-6xl gap-7 px-5 py-9 lg:grid-cols-[1.02fr_.98fr] lg:items-center lg:gap-10 lg:py-20">
-            <div className="max-w-[58ch] text-[#EDEDE6]">
-              <span className="inline-flex items-center gap-2 rounded-full border border-[#D98324]/45 bg-[#D98324]/15 px-3 py-1.5 font-mono text-[0.68rem] tracking-[0.1em] text-[#F0B372] uppercase">
-                <span className="size-1.5 rounded-full bg-[#D98324]" />
-                {c.urgencia}
-              </span>
-              <h1 className="mt-4 text-[clamp(1.85rem,1.15rem+3.4vw,3.5rem)] leading-[1.1] font-semibold">
-                {c.titulo}
-              </h1>
-              <p className="mt-3 max-w-[52ch] text-[0.98rem] text-[#C6CFDA] lg:text-lg">{c.subtitulo}</p>
-              <Prazo />
-              <ul className="mt-6 hidden flex-wrap gap-2 border-t border-sage/20 pt-5 lg:flex">
-                {[
-                  ['No mercado desde', String(MX_SITE.desde)],
-                  ['Cotamos em', `${SEGURADORAS.length} seguradoras`],
-                  ['Escritório no', 'centro de Itapira'],
-                ].map(([k, v]) => (
-                  <li
-                    key={k}
-                    className="rounded-full border border-sage/20 bg-sage/10 px-3 py-1.5 text-xs text-[#A8B2BF]"
-                  >
-                    {k} <b className="font-semibold text-sage">{v}</b>
-                  </li>
-                ))}
-              </ul>
+          <HeroFundo fotos={fundosHero(c.slug)}>
+            <div className="relative mx-auto grid max-w-6xl gap-7 px-5 py-9 lg:grid-cols-[1.02fr_.98fr] lg:items-center lg:gap-10 lg:py-20">
+              <div className="max-w-[58ch] text-[#EDEDE6]">
+                <span className="inline-flex items-center gap-2 rounded-full border border-[#D98324]/45 bg-[#D98324]/15 px-3 py-1.5 font-mono text-[0.68rem] tracking-[0.1em] text-[#F0B372] uppercase">
+                  <span className="size-1.5 rounded-full bg-[#D98324]" />
+                  {c.urgencia}
+                </span>
+                <h1 className="mt-4 text-[clamp(1.85rem,1.15rem+3.4vw,3.5rem)] leading-[1.1] font-semibold">
+                  {c.titulo}
+                </h1>
+                <p className="mt-3 max-w-[52ch] text-[0.98rem] text-[#C6CFDA] lg:text-lg">{c.subtitulo}</p>
+                <Prazo />
+                <ul className="mt-6 hidden flex-wrap gap-2 border-t border-sage/20 pt-5 lg:flex">
+                  {[
+                    ['No mercado desde', String(MX_SITE.desde)],
+                    ['Cotamos em', `${SEGURADORAS.length} seguradoras`],
+                    ['Escritório no', 'centro de Itapira'],
+                  ].map(([k, v]) => (
+                    <li
+                      key={k}
+                      className="rounded-full border border-sage/20 bg-sage/10 px-3 py-1.5 text-xs text-[#A8B2BF]"
+                    >
+                      {k} <b className="font-semibold text-sage">{v}</b>
+                    </li>
+                  ))}
+                </ul>
+                <ControlesFundo className="mt-5" />
+              </div>
+              <ChatQualificacao segmento={c.slug} />
             </div>
-            <ChatQualificacao segmento={c.slug} />
-          </div>
+          </HeroFundo>
         </section>
 
         {/* ---------- SEGURADORAS ---------- */}

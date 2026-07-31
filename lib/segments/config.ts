@@ -155,6 +155,29 @@ export function ehSegmento(v: string): v is Segmento {
   return v in SEGMENTOS;
 }
 
+export interface FotoHero {
+  src: string;
+  /** Descreve a cena — usado só nos rótulos dos controles; a foto em si é decorativa. */
+  alt: string;
+}
+
+/**
+ * As fotos que o hero rotaciona, começando sempre pela do próprio segmento.
+ *
+ * O protótipo tinha um slider único que trocava foto *e* copy junto. Aqui a
+ * copy é fixa (ela pertence à rota), então só o fundo gira — a primeira foto
+ * é a do segmento, e as demais entram como pano de fundo do mesmo discurso.
+ *
+ * Deriva de SEGMENTOS de propósito: segmento novo no objeto entra na rotação
+ * de todos os outros sem tocar em nenhum componente.
+ */
+export function fundosHero(atual: Segmento): FotoHero[] {
+  return [atual, ...SLUGS.filter((s) => s !== atual)].map((s) => ({
+    src: SEGMENTOS[s].foto,
+    alt: SEGMENTOS[s].fotoAlt,
+  }));
+}
+
 /** Dados institucionais — usados no rodapé, no JSON-LD e no chat. */
 export const MX_SITE = {
   nome: 'MX Corretora de Seguros',
