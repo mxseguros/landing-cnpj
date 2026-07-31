@@ -1,7 +1,8 @@
 # Plano de Execução — Landing Pages B2B + Agente de IA de Qualificação
 
 **Cliente:** MX Seguros · Itapira/SP
-**Documento:** plano de execução · julho de 2026
+**Documento:** plano de execução · revisado em 31 de julho de 2026 contra o que está no ar
+**No ar:** https://mx-landing-pj.vercel.app (staging, `noindex` até o DNS de `mxseguros.com.br`)
 **Fontes:** `planejamento.docx` (Plano Comercial B2B) e `MXSeguros_Estrategia_Marketing_B2B.pptx`
 **Documento irmão:** [PRD.md](PRD.md) — requisitos detalhados de produto
 
@@ -27,12 +28,15 @@ Este projeto entrega essas páginas **com um agente de IA no lugar do formulári
 - Template de página dirigido por configuração de segmento
 - **`/empresas`** — comércio e serviços; casa com o Google Ads de "seguro empresarial Itapira"
 - **`/condominio`** — obrigatório por lei, recorrente, síndico decide direto
-- Agente de IA de qualificação nas duas páginas, com perguntas específicas por segmento
+- **`/frota`** — antecipado do Ship 2 (ver nota abaixo)
+- Agente de IA de qualificação nas três páginas, com perguntas específicas por segmento
 - Persistência, pontuação e roteamento do lead
 - Analytics de funil
 
+> **`/frota` foi antecipado.** O template dirigido por configuração saiu barato o bastante para que a terceira rota custasse uma entrada em `lib/segments/config.ts` — nenhum componente mudou. A página está no ar junto das outras duas. O que continua no Ship 2 é o resto da lista abaixo.
+
 ### Ship 2 (fora deste plano)
-`/frota`; notificação via WhatsApp Cloud API; integração com o CRM definitivo; remarketing; avaliar `/agronegocio` e `/industria`.
+Notificação via WhatsApp Cloud API; integração com o CRM definitivo; remarketing; avaliar `/agronegocio` e `/industria`.
 
 ### Explicitamente fora de escopo
 Reformulação do site institucional; automação de e-mail marketing; portal do cliente; cotação automatizada de preço (proibido — ver PRD §7).
@@ -44,7 +48,7 @@ Reformulação do site institucional; automação de e-mail marketing; portal do
 | Camada | Escolha | Motivo |
 |---|---|---|
 | Framework | Next.js 16 App Router + TypeScript | Rota dinâmica por segmento; Server Components para LCP baixo |
-| UI | Tailwind CSS v4 + shadcn/ui | Velocidade; acessível por padrão |
+| UI | Tailwind CSS v4, sem biblioteca de componentes | shadcn/ui estava previsto e **não foi usado**: as páginas são texto, cards e `<details>`, e os dois controles interativos (chat e slider do hero) são específicos demais para um componente de catálogo. Uma dependência a menos para manter |
 | Host | Vercel, runtime Node.js (Fluid Compute) | Streaming do chat sem `runtime = 'edge'` |
 | LLM | AI SDK v7 + `@ai-sdk/anthropic`, modelo `claude-opus-5` | API da Anthropic direto, mesmo padrão do sistema de DRE — uma chave para os dois projetos. Custo medido em ~R$ 0,33/conversa, seis vezes abaixo do teto |
 | Banco | Neon Postgres (Vercel Marketplace) | Leads, transcript, score, UTM |
@@ -87,20 +91,26 @@ O botão `wa.me` com mensagem pré-preenchida cumpre o *"cai no WhatsApp da cél
 
 Não existe manual de marca. A identidade foi derivada de `mxseguros.com.br` para não destoar do institucional.
 
+Tokens como implementados em [`app/globals.css`](../app/globals.css):
+
 | Token | Hex | Uso |
 |---|---|---|
 | `navy` | `#071B34` | Cor institucional dominante |
+| `navy-2` | `#0D2947` | Superfície elevada sobre navy |
 | `sage` | `#B0AF94` | Acento — é a cor do símbolo M/X do logo |
-| `sage-light` | `#D0D5D2` | Superfícies e divisores |
-| `whatsapp` | `#25D366` | Exclusivo do CTA de WhatsApp |
+| `sage-ink` | `#5F5E46` | Sage escurecido, **obrigatório para texto de acento sobre fundo claro** |
+| `sky` · `graphite` · `mist` · `paper` | — | Neutros de apoio |
+| `whats` | `#25D366` | Exclusivo do CTA de WhatsApp |
+
+> **`sage-ink` não é preciosismo.** O sage puro tem 1,9:1 contra fundo claro — reprova em WCAG AA por larga margem. Todo texto de acento usa a variante escurecida; o sage puro fica em superfícies, divisores e texto sobre navy. O `sage-light #D0D5D2` que este plano previa nunca foi implementado.
 
 Navy + sage é uma combinação incomum e boa para seguros B2B: séria sem cair no azul corporativo genérico. **Manter, não substituir.**
 
-O site carrega Lato, Roboto, Roboto Slab e Ubuntu simultaneamente — kitchen sink de tema WordPress, não escolha de marca. As páginas definem um par tipográfico próprio e enxuto.
+O site institucional carrega Lato, Roboto, Roboto Slab e Ubuntu simultaneamente — kitchen sink de tema WordPress, não escolha de marca. As páginas usam um par próprio via `next/font`: **Inter** (texto) e **Fraunces** (títulos). Há também alternador claro/escuro, que o plano não previa.
 
 ### Prova social disponível
 - **"No mercado de seguros desde 2002"** — 20+ anos
-- **10 seguradoras parceiras:** Azul, Itaú, MSIG, Tokio Marine, HDI, Yelum, Allianz, Zurich, Sompo, Bradesco — sustenta a promessa de multicálculo
+- **9 seguradoras parceiras** exibidas nas páginas: Allianz, Azul, HDI, Itaú, Mitsui Sumitomo, Sompo, Tokio Marine, Yelum, Zurich — sustenta a promessa de multicálculo. *Bradesco constava neste levantamento e não entrou: não havia logo disponível. Confirmar com a MX se é parceira ativa.*
 - **25+ logos de clientes** (varejo, restaurantes, óticas, farmácias) — exatamente o ICP de comércio e serviços
 - **Duas unidades:** Av. Rio Branco, 221 — Centro, Itapira/SP · Rua Argentina, 15 — Águas de Lindoia
 - Sem depoimentos ainda; o plano de marketing prevê pedir avaliação no Google a cada cliente
@@ -109,61 +119,67 @@ O site carrega Lato, Roboto, Roboto Slab e Ubuntu simultaneamente — kitchen si
 
 ## 6. Fases e checklist
 
+> **Estado em 31/07/2026:** app no ar em https://mx-landing-pj.vercel.app (staging — `noindex` até o DNS de `mxseguros.com.br`). Fases 1 e 2 concluídas, Fase 3 concluída menos anti-abuso, Fase 4 não iniciada. Os itens abaixo só estão marcados quando verificados no código; o que depende de medição em produção (Lighthouse, QA em dispositivo real) segue aberto mesmo quando implementado.
+
 ### Fase 0 — Fundação
 - [x] Ler os documentos comercial e de marketing
 - [x] Extrair ICP, segmentos, ramos por fase, raio geográfico, gatilhos e KPIs
 - [x] Extrair identidade visual e prova social do site atual
 - [x] Escrever este plano e o PRD
-- [ ] Aprovar o protótipo de UI
-- [ ] Fechar a tabela de score A/B/C junto do closer, em linguagem de negócio
+- [x] Aprovar o protótipo de UI — *inferido: o site foi construído a partir dele e está no ar. Se a aprovação formal da MX nunca aconteceu, desmarcar*
+- [ ] Fechar a tabela de score A/B/C junto do closer, em linguagem de negócio — *`score.ts` roda com a tabela do PRD §5; falta a validação do closer*
 - [ ] Confirmar acesso ao DNS e como publicar sob `mxseguros.com.br`
-- [ ] Inicializar: `create-next-app`, git, projeto Vercel, ambiente de preview
+- [x] Inicializar: `create-next-app`, git, projeto Vercel, ambiente de preview
 
 ### Fase 1 — Mensagem por segmento
-- [ ] Headline e oferta de `/empresas` — dor do comerciante e prestador local
-- [ ] Headline e oferta de `/condominio` — obrigatoriedade legal e responsabilidade do síndico
-- [ ] CTA consultivo, ecoando o material de vendas do plano de marketing ("raio-x de riscos")
-- [ ] Mapear objeções do decisor PJ e onde cada uma é respondida
-- [ ] Copy completo dos dois segmentos
-- [ ] Revisão regulatória: nada de prometer cobertura ou preço
+- [x] Headline e oferta de `/empresas` — dor do comerciante e prestador local
+- [x] Headline e oferta de `/condominio` — obrigatoriedade legal e responsabilidade do síndico
+- [x] CTA consultivo, ecoando o material de vendas do plano de marketing ("raio-x de riscos")
+- [x] Mapear objeções do decisor PJ e onde cada uma é respondida — FAQ da página + guardrails do prompt
+- [x] Copy completo dos três segmentos (`/frota` incluído)
+- [ ] Revisão regulatória: nada de prometer cobertura ou preço — *guardrails escritos e com eval; falta a leitura de um habilitado SUSEP*
 
 ### Fase 2 — Build das páginas
-- [ ] Design tokens navy/sage em Tailwind v4
-- [ ] shadcn/ui e componentes base
-- [ ] Rota `app/[segmento]/page.tsx` dirigida por `lib/segments/config.ts` — copy, coberturas, perguntas e regras vêm da config, não do JSX
-- [ ] Seções como Server Components; só o chat é client
-- [ ] Mobile-first — tráfego de Google Ads local é majoritariamente mobile
-- [ ] WCAG 2.2 AA: contraste, foco visível, labels, navegação por teclado
-- [ ] Performance: `next/image`, `next/font`, LCP < 2,5 s, CLS < 0,1
-- [ ] Formulário de fallback para quem não quer conversar
-- [ ] SEO local: metadata por segmento, JSON-LD `InsuranceAgency` com o endereço de Itapira, `sitemap.ts`, `robots.ts`
-- [ ] Política de Privacidade e Termos — obrigatório para rodar Google Ads
-- [ ] Deploy de preview e revisão em dispositivo real
+- [x] Design tokens navy/sage em Tailwind v4 — mais `sage-ink` para contraste e tema claro/escuro
+- [x] ~~shadcn/ui e componentes base~~ — **descartado**, ver §3
+- [x] Rota `app/[segmento]/page.tsx` dirigida por `lib/segments/config.ts` — copy, coberturas, perguntas e regras vêm da config, não do JSX
+- [x] Seções como Server Components; client apenas no chat, no alternador de tema e no fundo do hero
+- [x] Mobile-first — tráfego de Google Ads local é majoritariamente mobile
+- [ ] WCAG 2.2 AA: contraste, foco visível, labels, navegação por teclado — *implementado (foco visível global, alvos de 44 px, `prefers-reduced-motion`, `sage-ink` para contraste); falta auditoria*
+- [ ] Performance: `next/image`, `next/font`, LCP < 2,5 s, CLS < 0,1 — *`next/image` e `next/font` em uso; falta medir*
+- [x] Formulário de fallback para quem não quer conversar
+- [x] SEO local: metadata por segmento, JSON-LD `InsuranceAgency` com o endereço de Itapira, `sitemap.ts`, `robots.ts`
+- [ ] Política de Privacidade e Termos — obrigatório para rodar Google Ads · **não escrita; bloqueia o Ads**
+- [x] Deploy de preview — *falta a revisão em dispositivo real*
 
 > **Marco:** aqui as páginas já recebem tráfego pago com formulário. O agente é incremento, não pré-requisito.
 
 ### Fase 3 — Agente de IA
-- [ ] Schema Zod do lead (PRD §5)
-- [ ] System prompt: consultor de riscos da MX, tom local e direto, **uma pergunta por vez, máximo 6–8 turnos**
-- [ ] Guardrails (PRD §7)
-- [ ] Tools: `salvarQualificacao`, `solicitarContatoHumano`, `encerrarConversa`
-- [ ] Motor de score determinístico em `lib/agent/score.ts` — o LLM coleta, o código pontua
-- [ ] Route Handler de streaming `app/api/chat/route.ts`
-- [ ] Widget de chat: streaming, indicador de digitação, erro, retomada de sessão
-- [ ] Escape para humano disponível em qualquer turno
-- [ ] Rate limiting e BotID no endpoint
-- [ ] Bateria de evals (PRD §9)
+- [x] Schema Zod do lead (PRD §5)
+- [x] System prompt: consultor de riscos da MX, tom local e direto, **uma pergunta por vez, máximo 6–8 turnos**
+- [x] Guardrails (PRD §7)
+- [x] Tools: `salvarQualificacao`, `solicitarContatoHumano`, `encerrarConversa`
+- [x] Motor de score determinístico em `lib/agent/score.ts` — o LLM coleta, o código pontua
+- [x] Route Handler de streaming `app/api/chat/route.ts`
+- [x] Widget de chat: streaming, indicador de digitação, erro, retomada de sessão
+- [x] Escape para humano disponível em qualquer turno
+- [ ] Rate limiting e BotID no endpoint — **`TODO` explícito em [`app/api/chat/route.ts:39`](../app/api/chat/route.ts); único item da fase em aberto e o de maior risco**
+- [x] Bateria de evals (PRD §9) — 10 casos de score + 12 de conversa em `lib/agent/evals.ts`
+
+> ⚠️ **O endpoint do LLM está exposto sem anti-abuso.** O chat responde a qualquer requisição, sem BotID e sem rate limit, num deploy público. É o risco "bots consumindo tokens" da §8 sem nenhuma mitigação ativa — o teto de gasto no Console da Anthropic é hoje a única barreira. Fechar antes de mandar tráfego pago para a página.
 
 ### Fase 4 — Dados, roteamento e LGPD
 - [ ] Provisionar Postgres via `vercel integration`
 - [ ] Tabelas `leads` e `conversations`
-- [ ] `lib/leads/sink.ts` → `deliverLead()` como ponto único de saída
-- [ ] Botão `wa.me` com mensagem pré-preenchida e protocolo
-- [ ] E-mail ao corretor com resumo e transcript; confirmação ao lead
-- [ ] Captura de UTM e referrer — sem isso não se mede o Google Ads
-- [ ] LGPD: consentimento explícito, base legal, retenção do transcript, canal de exclusão
-- [ ] Segredos apenas em `vercel env`
+- [x] `lib/leads/sink.ts` → `deliverLead()` como ponto único de saída — *estrutura pronta e já usada pelo chat e pelo formulário; as duas implementações internas são `console.info`*
+- [x] Botão `wa.me` com mensagem pré-preenchida e protocolo
+- [ ] E-mail ao corretor com resumo e transcript; confirmação ao lead — *`resumoParaCrm()` já formata a mensagem; falta o Resend*
+- [x] Captura de UTM e referrer — sem isso não se mede o Google Ads
+- [ ] LGPD: consentimento explícito, base legal, retenção do transcript, canal de exclusão — *consentimento coletado e validado em `/api/lead`; falta base legal publicada, política de retenção e canal de exclusão*
+- [x] Segredos apenas em `vercel env`
 - [ ] Teste end-to-end com dado real
+
+> 🚨 **Nenhum lead está sendo persistido.** `persistir()` e `notificarCelula()` escrevem no log da Vercel e nada mais — o log rotaciona e o lead some. Enquanto a Fase 4 não fechar, **a página não pode receber tráfego pago**: cada visitante que conversar até o fim é uma verba gasta em lead que ninguém vai ler.
 
 ### Fase 5 — Instrumentação
 - [ ] Vercel Analytics e Speed Insights
@@ -193,20 +209,37 @@ O site carrega Lato, Roboto, Roboto Slab e Ubuntu simultaneamente — kitchen si
 
 ## 7. Estrutura de arquivos
 
+Como está de fato, hoje:
+
 ```
 app/[segmento]/page.tsx          página por segmento (Server Component)
-app/layout.tsx                   metadata, fontes, analytics
+app/page.tsx                     redireciona para /empresas
+app/layout.tsx                   metadata, fontes (Inter + Fraunces)
+app/globals.css                  design tokens e tema claro/escuro
 app/api/chat/route.ts            agente — streaming, runtime Node.js
-app/politica-de-privacidade/     LGPD
-lib/segments/config.ts           copy, coberturas, perguntas e regras por segmento
-components/sections/*.tsx        hero, dores, como-funciona, coberturas, provas, faq, cta
-components/chat/*.tsx            widget de chat (client)
+app/api/lead/route.ts            formulário de fallback
+app/robots.ts · app/sitemap.ts   derivados de lib/site.ts
+lib/site.ts                      host do deploy; decide indexação e URL canônica
+lib/segments/config.ts           copy, cenários, coberturas e metadata por segmento
+lib/agent/index.ts               montagem do agente (modelo, reasoning, tools)
+lib/agent/config.ts              constantes da MX usadas pelo agente
 lib/agent/prompt.ts              system prompt e guardrails
 lib/agent/schema.ts              schema Zod do lead
 lib/agent/score.ts               motor A/B/C + flag conta_tecnica
+lib/agent/tools.ts               salvarQualificacao · solicitarContatoHumano · encerrarConversa
+lib/agent/evals.ts               10 casos de score + 12 de conversa
 lib/leads/sink.ts                deliverLead()
-lib/db/schema.ts                 leads, conversations
+components/chat/*.tsx            widget de qualificação e formulário de fallback
+components/hero-fundo.tsx        rotação automática do fundo do hero
+components/alternador-tema.tsx   claro/escuro
+prototipo/index.html             protótipo aprovado — registro histórico, não espelho
 ```
+
+**Três caminhos deste plano nunca foram criados:**
+
+`components/sections/*.tsx` — as seções ficaram inline em `app/[segmento]/page.tsx`, com dois helpers locais (`Cabecalho`, `Rodape`). São blocos de layout usados uma vez cada, numa página só; extrair sete arquivos daria indireção sem reúso. Revisitar se surgir uma segunda família de páginas.
+
+`app/politica-de-privacidade/` e `lib/db/schema.ts` — pendentes de verdade, não decisões. O primeiro bloqueia o Google Ads; o segundo é a Fase 4.
 
 ---
 
@@ -247,8 +280,12 @@ lib/db/schema.ts                 leads, conversations
 5. Número de WhatsApp de destino — o (19) 3863-8150 institucional ou um dedicado da célula. **Recomendação: dedicado**, senão não há como medir o funil nem cobrar SLA
 6. Qual CRM a célula vai ativar
 
-**Bloqueia o deploy final**
+**Bloqueiam a indexação** — o deploy em si já está feito e funcionando em https://mx-landing-pj.vercel.app
+
 7. Quem administra o WordPress e o DNS, e se as páginas entram como rewrite de subpasta (`mxseguros.com.br/empresas`) ou subdomínio. **Rewrite é melhor para SEO**, mas exige acesso à configuração do servidor.
+8. Política de Privacidade e Termos. Não é só LGPD: o Google Ads recusa a conta sem ela, e o Ads é a fonte de tráfego que justifica o projeto inteiro.
+
+> Enquanto o host for `*.vercel.app`, `robots.ts` responde `Disallow: /` para tudo. Isso é intencional — ver [`lib/site.ts`](../lib/site.ts). O staging estar fora do Google **não é bug e não precisa de correção**; some sozinho quando o domínio real apontar para cá.
 
 ---
 

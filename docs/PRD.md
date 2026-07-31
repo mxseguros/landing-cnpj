@@ -2,7 +2,8 @@
 
 **Produto:** captação e qualificação automatizada de leads PJ
 **Cliente:** MX Seguros · Itapira/SP
-**Versão:** 1.0 · julho de 2026
+**Versão:** 1.1 · 31 de julho de 2026 — revisado contra o que está no ar
+**No ar:** https://mx-landing-pj.vercel.app (staging, `noindex` até o DNS de `mxseguros.com.br`)
 **Documento irmão:** [Plano.md](Plano.md) — fases, cronograma e checklist de execução
 
 ---
@@ -53,6 +54,9 @@ Síndico morador, síndico profissional ou administradora com carteira de prédi
 ### Persona 3 — Comprador de média empresa ou indústria (fora do ICP da Fase 1)
 Cristália, Cargill, Hexagon e similares. Ticket alto, ciclo longo, decisão técnica e colegiada. **Não é o alvo da página, mas vai chegar nela.** Não pode ser descartado — deve ser sinalizado e encaminhado ao closer com tratamento diferente.
 
+### Persona 4 — Responsável por frota (página `/frota`) · **não documentada**
+`/frota` foi ao ar sem persona escrita aqui. A página e o roteiro do agente assumem um dono ou gestor de empresa com 1–30 veículos de operação (entrega, visita, transporte) na região, mas isso saiu do copy, não de um levantamento no plano comercial — que não cita frota como segmento de Fase 1. **Escrever esta persona ou aceitar explicitamente que `/frota` é uma aposta sem base documental.**
+
 ### Usuário interno — a célula B2B
 O hunter consome a fila de leads B. O closer consome os leads A e as contas técnicas. Ambos precisam ver o transcript, não só os campos.
 
@@ -71,10 +75,16 @@ Ramos de Fase 2 (Vida em Grupo e Benefícios) e Fase 3 (RC, D&O, Garantia, Trans
 ## 5. Requisitos funcionais
 
 ### RF-01 · Páginas por segmento
-Template único dirigido por `lib/segments/config.ts`. Copy, coberturas, perguntas do agente e regras de score vêm da configuração, não do JSX. Ship 1: `/empresas` e `/condominio`.
+Template único dirigido por `lib/segments/config.ts`. Copy, coberturas, perguntas do agente e regras de score vêm da configuração, não do JSX. Ship 1: `/empresas`, `/condominio` e `/frota` — a terceira rota foi antecipada do Ship 2 por custar apenas uma entrada na configuração ([Plano §2](Plano.md)).
 
 ### RF-02 · Estrutura da página
-Hero com entrada do chat → dores do segmento → como funciona (3 passos) → coberturas → prova social → diferenciais da MX → FAQ (inclui LGPD) → CTA final → rodapé com CNPJ e SUSEP.
+Hero com entrada do chat → faixa de seguradoras → cenários do segmento → como funciona (3 passos) → coberturas → diferenciais da MX → FAQ (inclui LGPD) → formulário de fallback → rodapé com CNPJ e SUSEP.
+
+Duas diferenças em relação ao previsto acima, ambas já no ar:
+
+**A prova social virou a faixa de logos das seguradoras**, logo abaixo do hero, em vez de uma seção própria mais abaixo. Sem depoimentos ainda, a prova disponível é o multicálculo — e ela responde a objeção "vocês cotam em quantas?" antes de a pessoa rolar a página.
+
+**O hero tem fundo rotativo.** As fotos dos três segmentos alternam sozinhas a cada 7 s, com pausa no hover e no foco e respeitando `prefers-reduced-motion`; a copy é fixa da rota. Herda o slider do protótipo, que trocava copy e foto juntas — o que deixou de fazer sentido quando cada segmento virou uma URL própria com seu próprio Google Ads.
 
 ### RF-03 · Agente conversacional
 Widget na própria página, com streaming. Conduz a qualificação em **uma pergunta por vez, máximo 6–8 turnos**. Conversa longa mata conversão.
@@ -140,7 +150,7 @@ Aceite explícito antes do envio dos dados. Base legal declarada, política de r
 | Disponibilidade | Se o LLM falhar, o widget degrada para o formulário — a página nunca perde o lead |
 | Segurança | BotID, rate limit por IP e sessão, teto de turnos por conversa |
 | SEO | Metadata por segmento, JSON-LD `InsuranceAgency` com endereço de Itapira, sitemap, robots |
-| Custo | Teto por conversa monitorado via AI Gateway |
+| Custo | Teto de gasto configurado no Console da Anthropic. **Não via AI Gateway** — o projeto usa a API direto, ver [Plano §3](Plano.md) |
 
 ## 7. Guardrails do agente (regulatório)
 
@@ -186,7 +196,9 @@ Bateria mínima antes do go-live. Cada caso tem resultado esperado documentado.
 
 ## 10. Fora de escopo
 
-Reformulação do site institucional · automação de e-mail marketing · portal do cliente · cotação automatizada de preço · emissão de apólice · `/frota`, `/agronegocio` e `/industria` (Ship 2) · integração com o CRM definitivo (Ship 2) · WhatsApp Cloud API (Ship 2).
+Reformulação do site institucional · automação de e-mail marketing · portal do cliente · cotação automatizada de preço · emissão de apólice · `/agronegocio` e `/industria` (Ship 2) · integração com o CRM definitivo (Ship 2) · WhatsApp Cloud API (Ship 2).
+
+`/frota` saiu desta lista: foi antecipado para o Ship 1 e está no ar.
 
 ## 11. Premissas e dependências
 

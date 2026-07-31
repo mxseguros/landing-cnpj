@@ -18,7 +18,11 @@ A célula B2B da corretora tem duas pessoas — um *hunter* e um *closer* — pa
 
 ## Estado atual
 
-**Fase 2** — app no ar localmente. Next.js 16 + React 19 + Tailwind v4, três landing pages geradas estaticamente e o agente ligado ao chat.
+**No ar em staging:** https://mx-landing-pj.vercel.app → redireciona para `/empresas`
+
+Next.js 16 + React 19 + Tailwind v4, três landing pages geradas estaticamente e o agente ligado ao chat. As Fases 1, 2 e 3 estão essencialmente concluídas; a Fase 4 (Postgres, e-mail, LGPD) ainda não começou — `deliverLead()` hoje só escreve no log.
+
+> **Staging, não produção.** Enquanto o host não for `mxseguros.com.br`, `robots.ts` bloqueia a indexação por completo (`Disallow: /`) — uma página em `*.vercel.app` indexada competiria com o site institucional exatamente nas buscas que este projeto existe para ganhar. O critério está em [lib/site.ts](lib/site.ts); nada precisa ser alterado no deploy final além do DNS.
 
 ```bash
 npm install
@@ -31,9 +35,12 @@ npm run dev                  # http://localhost:3000 → /empresas
 | `/` | Redireciona para `/empresas` |
 | `/empresas` · `/condominio` · `/frota` | Landing pages (SSG, revalidação diária) |
 | `/api/chat` | Endpoint do agente, streaming, runtime Node.js |
+| `/api/lead` | Formulário de fallback — mesmo `deliverLead()` do chat |
+| `/sitemap.xml` · `/robots.txt` | Gerados de `lib/site.ts` conforme o host |
 
 ```
 lib/segments/config.ts      copy, cenários, coberturas e metadata por segmento
+lib/site.ts                 host do deploy; decide indexação e URL canônica
 lib/agent/prompt.ts         system prompt e guardrails (traduz o doc da persona)
 lib/agent/schema.ts         schema Zod do lead
 lib/agent/score.ts          motor A/B/C + flag conta_tecnica — determinístico
@@ -41,9 +48,13 @@ lib/agent/tools.ts          salvarQualificacao · solicitarContatoHumano · ence
 lib/agent/evals.ts          10 casos de score + 12 de conversa
 lib/leads/sink.ts           deliverLead() — ponto único de saída do lead
 app/[segmento]/page.tsx     template único; não conhece nenhum segmento pelo nome
-components/chat/            widget de qualificação (único componente client)
+components/chat/            widget de qualificação e formulário de fallback
+components/hero-fundo.tsx   rotação automática do fundo do hero
+components/alternador-tema.tsx  claro/escuro
 prototipo/index.html        protótipo estático original, mantido como referência
 ```
+
+O protótipo é **registro do que foi aprovado**, não espelho da produção: ele ainda tem o slider que trocava copy e foto juntas, que virou três rotas com fundo rotativo. Consultar como histórico, não sincronizar.
 
 **Duas decisões que vale conhecer antes de mexer:**
 
@@ -63,8 +74,8 @@ Modelo: `claude-opus-5` via `@ai-sdk/anthropic`, com `reasoning: 'low'`. O motiv
 
 ## Pendências do cliente
 
-**Bloqueiam o go-live:** CNPJ e registro SUSEP da corretora · direito de uso dos logos das seguradoras.
+**Bloqueiam o go-live:** CNPJ e registro SUSEP da corretora · direito de uso dos logos das seguradoras · Política de Privacidade (exigida pelo Google Ads, ainda não escrita).
 **Bloqueiam a Fase 4:** SLA de resposta ao lead A · número de WhatsApp da célula · qual CRM ativar.
-**Bloqueia o deploy:** acesso ao DNS de `mxseguros.com.br`.
+**Bloqueia a indexação:** acesso ao DNS de `mxseguros.com.br`. O deploy já existe e funciona; enquanto o host for `*.vercel.app` ele permanece `noindex` por decisão de projeto, não por falha.
 
 Lista completa em [docs/Plano.md](docs/Plano.md) §10.
