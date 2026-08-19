@@ -33,7 +33,7 @@ export function AlternadorTema() {
       type="button"
       onClick={alternar}
       aria-label={`Mudar para tema ${tema === 'dark' ? 'claro' : 'escuro'}`}
-      className="grid size-11 shrink-0 place-items-center rounded-full border border-sage/35 text-[#A8B2BF] transition hover:border-sage hover:text-sage"
+      className="grid size-11 shrink-0 place-items-center rounded-full border border-brand-accent/35 text-brand-fg-mid transition hover:border-brand-accent hover:text-brand-accent"
     >
       <svg viewBox="0 0 24 24" className="size-[18px]" aria-hidden>
         <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="1.8" />

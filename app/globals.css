@@ -33,6 +33,47 @@
   --accent: #5F5E46;
 }
 
+/**
+ * Camada de marca — as faixas escuras (topo, hero, "como funciona", formulário,
+ * rodapé) e o texto que vive sobre elas.
+ *
+ * Separada da camada clara/escura de propósito: essas faixas são escuras nos dois
+ * temas, então não variam com `data-theme`. O que elas variam é por **segmento** —
+ * é aqui que `/agro` troca o azul-marinho pelo verde sem tocar em componente nenhum.
+ */
+:root {
+  --brand: #071B34;
+  --brand-2: #0D2947;
+  /* O sage (marrom claro da marca) é o acento sobre o escuro em todos os segmentos. */
+  --brand-accent: #B0AF94;
+  --brand-fg: #EDEDE6;
+  --brand-fg-soft: #C6CFDA;
+  --brand-fg-mid: #A8B2BF;
+  --brand-fg-faint: #93A1B1;
+  --brand-placeholder: #5F6C7C;
+  /* Véu sobre a foto do hero. Escurece o suficiente para o h1 ter contraste. */
+  --scrim-hero: linear-gradient(95deg, rgb(7 27 52 / .97) 0%, rgb(7 27 52 / .93) 32%, rgb(7 27 52 / .7) 58%, rgb(7 27 52 / .4) 100%);
+  --scrim-hero-mobile: linear-gradient(to top, rgb(7 27 52 / .97) 12%, rgb(7 27 52 / .88) 55%, rgb(7 27 52 / .72) 100%);
+}
+
+/**
+ * `/agro` — verde no lugar do marinho, sage mantido como acento.
+ *
+ * Fica no elemento que embrulha a página (app/[segmento]/page.tsx), não em :root:
+ * variável declarada em elemento mais interno vence a herdada, independentemente
+ * da especificidade da regra que a definiu lá em cima.
+ */
+[data-segmento="agro"] {
+  --brand: #082617;
+  --brand-2: #0F3A25;
+  --brand-fg-soft: #C8D9CB;
+  --brand-fg-mid: #A9BEAF;
+  --brand-fg-faint: #96AC9C;
+  --brand-placeholder: #62786A;
+  --scrim-hero: linear-gradient(95deg, rgb(8 38 23 / .97) 0%, rgb(8 38 23 / .93) 32%, rgb(8 38 23 / .7) 58%, rgb(8 38 23 / .4) 100%);
+  --scrim-hero-mobile: linear-gradient(to top, rgb(8 38 23 / .97) 12%, rgb(8 38 23 / .88) 55%, rgb(8 38 23 / .72) 100%);
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #060F1B;
@@ -68,6 +109,49 @@
   --accent: #5F5E46;
 }
 
+/**
+ * As seções claras do agro. Ao contrário da camada de marca, estas seguem o tema —
+ * por isso repetem os quatro blocos, na mesma ordem do resto do arquivo.
+ *
+ * No tema escuro os neutros padrão são francamente azuis (#060F1B, #0C1B2C); ao lado
+ * das faixas verdes eles brigam. Aqui viram os mesmos valores de luminosidade em
+ * matiz verde, para a página inteira ficar coerente nos dois temas.
+ */
+[data-segmento="agro"] {
+  --accent: #2E5A3C;
+  --surface-2: #F0F4EF;
+  --rule: #DDE5DB;
+}
+@media (prefers-color-scheme: dark) {
+  [data-segmento="agro"] {
+    --accent: #A8C5AE;
+    --bg: #07120C;
+    --surface: #0D1F15;
+    --surface-2: #14291C;
+    --ink-mid: #A6B4A9;
+    --ink-faint: #78897E;
+    --rule: #1F3A29;
+  }
+}
+:root[data-theme="dark"] [data-segmento="agro"] {
+  --accent: #A8C5AE;
+  --bg: #07120C;
+  --surface: #0D1F15;
+  --surface-2: #14291C;
+  --ink-mid: #A6B4A9;
+  --ink-faint: #78897E;
+  --rule: #1F3A29;
+}
+:root[data-theme="light"] [data-segmento="agro"] {
+  --accent: #2E5A3C;
+  --bg: #FFFDFB;
+  --surface: #FFFFFF;
+  --surface-2: #F0F4EF;
+  --ink-mid: #4A5460;
+  --ink-faint: #7C8590;
+  --rule: #DDE5DB;
+}
+
 @theme inline {
   --color-bg: var(--bg);
   --color-surface: var(--surface);
@@ -77,6 +161,14 @@
   --color-ink-faint: var(--ink-faint);
   --color-rule: var(--rule);
   --color-accent: var(--accent);
+  --color-brand: var(--brand);
+  --color-brand-2: var(--brand-2);
+  --color-brand-accent: var(--brand-accent);
+  --color-brand-fg: var(--brand-fg);
+  --color-brand-fg-soft: var(--brand-fg-soft);
+  --color-brand-fg-mid: var(--brand-fg-mid);
+  --color-brand-fg-faint: var(--brand-fg-faint);
+  --color-brand-placeholder: var(--brand-placeholder);
   --font-sans: var(--font-body);
   --font-display: var(--font-display-face);
 }

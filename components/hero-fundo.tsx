@@ -72,7 +72,7 @@ export function HeroFundo({
         onFocus={() => setPausado(true)}
         onBlur={() => setPausado(false)}
       >
-        <div aria-hidden className="absolute inset-0 -z-10 bg-navy">
+        <div aria-hidden className="absolute inset-0 -z-10 bg-brand">
           {fotos.map((f, i) => (
             <Image
               key={f.src}
@@ -91,7 +91,7 @@ export function HeroFundo({
 
         <div
           aria-hidden
-          className="absolute inset-0 -z-10 bg-[linear-gradient(95deg,rgba(7,27,52,.97)_0%,rgba(7,27,52,.93)_32%,rgba(7,27,52,.7)_58%,rgba(7,27,52,.4)_100%)] max-md:bg-[linear-gradient(to_top,rgba(7,27,52,.97)_12%,rgba(7,27,52,.88)_55%,rgba(7,27,52,.72)_100%)]"
+          className="absolute inset-0 -z-10 bg-[image:var(--scrim-hero)] max-md:bg-[image:var(--scrim-hero-mobile)]"
         />
 
         {children}
@@ -107,7 +107,7 @@ export function ControlesFundo({ className = '' }: { className?: string }) {
 
   return (
     <div
-      className={`flex items-center gap-4 border-t border-sage/20 pt-4 ${className}`}
+      className={`flex items-center gap-4 border-t border-brand-accent/20 pt-4 ${className}`}
       aria-roledescription="carrossel"
       aria-label="Fotos do plano de fundo"
     >
@@ -121,12 +121,12 @@ export function ControlesFundo({ className = '' }: { className?: string }) {
             aria-label={`Foto ${i + 1} de ${s.fotos.length}: ${f.alt}`}
             className="flex h-11 w-10 items-center"
           >
-            <span className="block h-[3px] w-full overflow-hidden rounded-full bg-sage/25">
+            <span className="block h-[3px] w-full overflow-hidden rounded-full bg-brand-accent/25">
               {i === s.atual && (
                 <i
                   // Remontar a cada troca é o que reinicia a animação da barra.
                   key={s.atual}
-                  className={`block h-full origin-left bg-sage ${
+                  className={`block h-full origin-left bg-brand-accent ${
                     s.pausado ? 'scale-x-100' : 'animate-[mx-preenche_linear_forwards]'
                   }`}
                   style={s.pausado ? undefined : { animationDuration: `${INTERVALO_MS}ms` }}
@@ -145,7 +145,7 @@ export function ControlesFundo({ className = '' }: { className?: string }) {
               type="button"
               onClick={() => s.passo(delta)}
               aria-label={rotulo}
-              className="grid size-11 place-items-center rounded-lg border border-sage/30 text-lg leading-none text-[#C6CFDA] transition hover:border-sage hover:text-sage"
+              className="grid size-11 place-items-center rounded-lg border border-brand-accent/30 text-lg leading-none text-brand-fg-soft transition hover:border-brand-accent hover:text-brand-accent"
             >
               {glifo}
             </button>
