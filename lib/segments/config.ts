@@ -1,15 +1,21 @@
 import type { Segmento } from '../agent/schema';
+import { MX } from '../agent/config';
 
 /**
  * Configuração por segmento.
  *
- * Toda a diferença entre `/empresas`, `/condominio` e `/frota` mora aqui —
- * copy, dores, coberturas, foto e metadata. O template em
- * `app/[segmento]/page.tsx` não conhece nenhum segmento pelo nome.
+ * Toda a diferença entre as landings mora aqui — copy, dores, coberturas, foto e
+ * metadata. O template em `app/[segmento]/page.tsx` não conhece nenhum segmento
+ * pelo nome.
  *
- * Adicionar um segmento novo (`/agronegocio`, por exemplo) é acrescentar uma
- * entrada neste objeto e a chave correspondente em `segmentoEnum` e em
- * `FOCO_POR_SEGMENTO` (lib/agent/prompt.ts). Nenhum componente muda.
+ * Adicionar um segmento novo é acrescentar uma entrada neste objeto e a chave
+ * correspondente em `segmentoEnum` (lib/agent/schema.ts), em `PERSONAS`
+ * (lib/agent/prompt.ts) e em `PUBLICO_POR_SEGMENTO` (lib/agent/config.ts).
+ * Nenhum componente muda.
+ *
+ * Os campos opcionais abaixo existem porque `/agro` fala com produtor rural, e não
+ * com empresa: o texto de urgência, o FAQ e o rótulo do formulário deixam de servir.
+ * Quem não declara nada continua com o comportamento de sempre.
  */
 
 export interface Cenario {
@@ -34,12 +40,44 @@ export interface ConfigSegmento {
   coberturasTitulo: string;
   coberturas: string[];
   meta: { title: string; description: string };
+
+  /** Nome do assistente no cabeçalho do chat. */
+  agente: string;
+  /**
+   * Bloco de prazo do hero. `{mes}` e `{proximo}` são substituídos pelos meses
+   * corrente e seguinte, e destacados. Sem isto, vale o texto de vencimento de apólice.
+   */
+  prazo?: string;
+  /** Perguntas próprias deste público. Sem isto, vale o FAQ padrão do template. */
+  faq?: [string, string][];
+  /** Rótulo do campo de organização no formulário de fallback. */
+  rotuloEmpresa?: { label: string; placeholder: string };
+  /**
+   * Seção de solicitação de orçamento com consulta ao CAR.
+   *
+   * Só o agro declara, e não por escolha editorial: a consulta depende do
+   * Cadastro Ambiental Rural, que existe para imóvel rural e para mais nada.
+   * Comércio, condomínio e frota não têm o equivalente.
+   */
+  orcamento?: { rotulo: string; titulo: string; lede: string };
+  /** Assunto que abre a conversa no WhatsApp do topo. */
+  assuntoWhatsApp?: string;
+  /**
+   * Hero parado, com a foto do próprio segmento em destaque e sem controles.
+   *
+   * A rotação existe para dar cross-sell entre as páginas B2B, que falam com o
+   * mesmo público. No agro ela não paga o próprio custo: o produtor via fachada
+   * de condomínio e pátio de frota no fundo de uma página de seguro rural, e a
+   * página baixava as fotos das outras três à toa.
+   */
+  heroEstatico?: boolean;
 }
 
 export const SEGMENTOS: Record<Segmento, ConfigSegmento> = {
   empresas: {
     slug: 'empresas',
     nav: 'Comércio e serviços',
+    agente: MX.agente,
     urgencia: 'Vencimento chegando',
     eyebrow: 'Seguro empresarial · Itapira e região',
     titulo: 'Depois do vencimento, o prejuízo é todo seu.',
@@ -77,6 +115,7 @@ export const SEGMENTOS: Record<Segmento, ConfigSegmento> = {
   condominio: {
     slug: 'condominio',
     nav: 'Condomínio',
+    agente: MX.agente,
     urgencia: 'Obrigação legal',
     eyebrow: 'Seguro condominial · Itapira e região',
     titulo: 'Condomínio sem seguro vigente cai no colo do síndico.',
@@ -114,6 +153,7 @@ export const SEGMENTOS: Record<Segmento, ConfigSegmento> = {
   frota: {
     slug: 'frota',
     nav: 'Frota',
+    agente: MX.agente,
     urgencia: 'Risco que roda todo dia',
     eyebrow: 'Seguro de frota · Itapira e região',
     titulo: 'Seu veículo de entrega sai todo dia. A apólice acompanhou?',
@@ -147,6 +187,72 @@ export const SEGMENTOS: Record<Segmento, ConfigSegmento> = {
         'Seguro de frota empresarial com corretora local. Renovações unificadas, carro reserva e assistência 24h para empresas de Itapira e região.',
     },
   },
+
+  agro: {
+    slug: 'agro',
+    nav: 'Agro',
+    agente: MX.agenteAgro,
+    urgencia: 'Janela de plantio',
+    eyebrow: 'Seguro rural · Itapira e região',
+    titulo: 'Depois que a lavoura nasce, o seguro não nasce junto.',
+    subtitulo:
+      'Seguro de lavoura tem prazo de contratação que fecha antes da semeadura. A MX cota nas principais seguradoras e responde no mesmo dia — comece antes da janela fechar.',
+    cta: 'Falar sobre a minha safra',
+    heroEstatico: true,
+    // Fornecida pela MX (agriculture-healthy-food.jpg), recortada em 1536x576 como
+    // as demais. Com o hero parado, a foto sozinha precisa dizer "agro" antes de o
+    // visitante ler o h1: produtor, lavoura em linha e pivô irrigando.
+    //
+    // O nome descreve a cena em vez de repetir o segmento porque o otimizador do
+    // Next guarda as variantes por URL, com TTL, sem olhar se o arquivo de origem
+    // mudou: trocar a foto mantendo `agro.jpg` faz o servidor continuar entregando
+    // a antiga até o cache expirar. Foto nova, nome novo.
+    foto: '/hero/agro-lavoura-irrigada.jpg',
+    fotoAlt: 'Produtor caminhando entre as linhas da lavoura irrigada ao amanhecer',
+    cenariosTitulo: 'Situações que a gente vê toda safra na região',
+    cenariosLede:
+      'Se alguma delas soa familiar, a conversa leva três minutos e você já sai sabendo o próximo passo.',
+    cenarios: [
+      { titulo: 'Plantou antes de contratar', texto: 'O seguro de lavoura costuma exigir contratação antes da semeadura. Depois que a planta nasce, na maioria dos produtos a janela já fechou — e só volta na safra seguinte.' },
+      { titulo: 'O banco liberou o custeio e pediu apólice', texto: 'Penhor rural e cobertura de benfeitorias travam a liberação do crédito. Quando o gerente pede, o calendário da safra já está correndo.' },
+      { titulo: 'O Proagro cobre o banco, não você', texto: 'Ele protege o financiamento de custeio. A receita que você deixou de colher, o barracão e o maquinário continuam por sua conta.' },
+      { titulo: 'Colheitadeira parada na janela de colheita', texto: 'Máquina quebrada em plena colheita não é conserto, é safra no chão. Máquinas e implementos têm apólice própria, separada da lavoura.' },
+      { titulo: 'Barracão cheio, apólice do ano passado', texto: 'Insumo estocado, café em coco, grão ensacado: o valor guardado muda toda safra, e a cobertura de benfeitorias raramente acompanha.' },
+      { titulo: 'Granizo em vinte minutos', texto: 'Chuva de pedra não avisa e não escolhe talhão. Sem seguro de lavoura, o prejuízo de uma tarde é o resultado do ano inteiro.' },
+      { titulo: 'Rebanho sem cobertura nenhuma', texto: 'Morte de matriz, touro ou animal de alto valor sai direto do caixa. Existe seguro pecuário para isso, e quase ninguém chega a cotar.' },
+      { titulo: 'Quem toca a propriedade também é patrimônio', texto: 'Se algo acontece com o produtor, a família herda custeio em aberto e safra em pé ao mesmo tempo. Vida do produtor é a cobertura que ninguém lembra de fazer.' },
+    ],
+    coberturasTitulo: 'O que dá para proteger na propriedade',
+    coberturas: [
+      'Seguro agrícola (lavoura)', 'Penhor rural', 'Benfeitorias e produtos agropecuários',
+      'Máquinas e implementos', 'Pecuário', 'Florestas',
+      'Vida do produtor', 'CPR — Cédula de Produto Rural',
+    ],
+    prazo:
+      'Estamos em {mes}. Quem planta em {proximo} precisa cotar agora — seguro de lavoura exige contratação antes da semeadura, e comparar seguradoras leva alguns dias úteis.',
+    rotuloEmpresa: { label: 'Propriedade ou fazenda', placeholder: 'Nome do sítio, chácara ou fazenda' },
+    assuntoWhatsApp: 'seguro para a minha propriedade rural',
+    orcamento: {
+      rotulo: 'Orçamento',
+      titulo: 'Peça o orçamento com a área da propriedade já conferida',
+      lede:
+        'Informe o código do CAR e a página busca o contorno, o município e a área da sua propriedade no registro. ' +
+        'O corretor recebe o pedido com o número certo em mãos — e não com a área que você teve que estimar de cabeça.',
+    },
+    faq: [
+      ['Estou falando com uma pessoa ou com um robô?', 'Com um assistente automático da MX, e ele avisa isso logo de início. Ele só organiza as informações — quem analisa o risco, cota e assina é um corretor habilitado da nossa equipe. A qualquer momento você pode pedir para falar direto com uma pessoa.'],
+      ['Dá para segurar a lavoura depois de plantada?', 'Na maioria dos produtos, não. O seguro agrícola costuma exigir contratação antes da semeadura ou antes da emergência da cultura, e o prazo muda conforme a cultura e a seguradora — quem confirma o seu caso é o corretor. Mesmo com a lavoura no chão vale conversar: benfeitorias, máquinas, rebanho e vida continuam disponíveis, e a lavoura volta a valer na safra seguinte.'],
+      ['Existe subvenção do governo no seguro rural?', 'Existe o PSR, o Programa de Subvenção ao Prêmio do Seguro Rural, em que o governo federal paga parte do prêmio. O percentual muda por cultura e por ano e o orçamento é limitado, por isso a gente não promete número aqui. O corretor confirma o que está valendo para a sua cultura no momento da cotação.'],
+      ['O Proagro já não me protege?', 'O Proagro protege o financiamento de custeio junto ao banco. Ele não repõe a receita que você deixou de colher, nem cobre benfeitorias, máquinas ou rebanho. São coisas complementares, não concorrentes — dá para ter os dois.'],
+      ['Vocês atendem produtor pessoa física?', 'Sim. Boa parte das propriedades da região está no CPF do produtor, e isso não muda nada no atendimento nem nas coberturas disponíveis.'],
+      ['O que vocês fazem com os meus dados?', 'Usamos exclusivamente para preparar sua cotação e entrar em contato, conforme a LGPD. Não vendemos nem compartilhamos com terceiros fora do processo de cotação, e você pode pedir a exclusão a qualquer momento pelo mxseguros@mxseguros.com.br.'],
+    ],
+    meta: {
+      title: 'Seguro rural e agrícola em Itapira | MX Seguros',
+      description:
+        'Seguro de lavoura, penhor rural, benfeitorias, máquinas e rebanho com corretora local desde 2002. Atendimento a produtor rural de Itapira, Pinhal, Mogi Guaçu e região.',
+    },
+  },
 };
 
 export const SLUGS = Object.keys(SEGMENTOS) as Segmento[];
@@ -170,9 +276,16 @@ export interface FotoHero {
  *
  * Deriva de SEGMENTOS de propósito: segmento novo no objeto entra na rotação
  * de todos os outros sem tocar em nenhum componente.
+ *
+ * Segmento com `heroEstatico` fica só com a própria foto. Não precisa de mais
+ * nada: `HeroFundo` não arma o timer e `ControlesFundo` não renderiza quando a
+ * lista tem uma foto só.
  */
 export function fundosHero(atual: Segmento): FotoHero[] {
-  return [atual, ...SLUGS.filter((s) => s !== atual)].map((s) => ({
+  const ordem = SEGMENTOS[atual].heroEstatico
+    ? [atual]
+    : [atual, ...SLUGS.filter((s) => s !== atual)];
+  return ordem.map((s) => ({
     src: SEGMENTOS[s].foto,
     alt: SEGMENTOS[s].fotoAlt,
   }));

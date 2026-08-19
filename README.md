@@ -12,7 +12,8 @@ A célula B2B da corretora tem duas pessoas — um *hunter* e um *closer* — pa
 |---|---|
 | [docs/Plano.md](docs/Plano.md) | Plano de execução: escopo, arquitetura, 8 fases com checklist, riscos, pendências |
 | [docs/PRD.md](docs/PRD.md) | Requisitos: personas, métricas, requisitos funcionais, guardrails, modelo de dados, evals |
-| [docs/Agente_Corretor_PJ_MX.md](docs/Agente_Corretor_PJ_MX.md) | Persona do agente — **fonte de verdade**; o código é a implementação |
+| [docs/Agente_Corretor_PJ_MX.md](docs/Agente_Corretor_PJ_MX.md) | Persona do agente PJ — **fonte de verdade**; o código é a implementação |
+| [docs/Agente_MX_Agro.md](docs/Agente_MX_Agro.md) | Persona do agente rural — **fonte de verdade**; explica por que não é o agente PJ |
 | `docs/planejamento.docx` | Plano comercial B2B da MX (documento do cliente) |
 | `docs/MXSeguros_Estrategia_Marketing_B2B.pptx` | Estratégia de marketing B2B (documento do cliente) |
 
@@ -33,7 +34,7 @@ npm run dev                  # http://localhost:3000 → /empresas
 | Rota | O que é |
 |---|---|
 | `/` | Redireciona para `/empresas` |
-| `/empresas` · `/condominio` · `/frota` | Landing pages (SSG, revalidação diária) |
+| `/empresas` · `/condominio` · `/frota` · `/agro` | Landing pages (SSG, revalidação diária) |
 | `/api/chat` | Endpoint do agente, streaming, runtime Node.js |
 | `/api/lead` | Formulário de fallback — mesmo `deliverLead()` do chat |
 | `/sitemap.xml` · `/robots.txt` | Gerados de `lib/site.ts` conforme o host |
@@ -41,11 +42,11 @@ npm run dev                  # http://localhost:3000 → /empresas
 ```
 lib/segments/config.ts      copy, cenários, coberturas e metadata por segmento
 lib/site.ts                 host do deploy; decide indexação e URL canônica
-lib/agent/prompt.ts         system prompt e guardrails (traduz o doc da persona)
+lib/agent/prompt.ts         personas por público + guardrails (traduz os docs de persona)
 lib/agent/schema.ts         schema Zod do lead
 lib/agent/score.ts          motor A/B/C + flag conta_tecnica — determinístico
 lib/agent/tools.ts          salvarQualificacao · solicitarContatoHumano · encerrarConversa
-lib/agent/evals.ts          10 casos de score + 12 de conversa
+lib/agent/evals.ts          16 casos de score + 19 de conversa
 lib/leads/sink.ts           deliverLead() — ponto único de saída do lead
 app/[segmento]/page.tsx     template único; não conhece nenhum segmento pelo nome
 components/chat/            widget de qualificação e formulário de fallback
@@ -60,7 +61,9 @@ O protótipo é **registro do que foi aprovado**, não espelho da produção: el
 
 A pontuação do lead roda em `score.ts`, não no modelo. A IA coleta; a regra decide. Um LLM atribuindo score é inauditável e muda de resposta entre execuções, o que impede calibrar o roteamento com o feedback do closer.
 
-Adicionar um segmento é acrescentar uma entrada em `lib/segments/config.ts` e a chave correspondente em `segmentoEnum` e `FOCO_POR_SEGMENTO`. Nenhum componente muda.
+Adicionar um segmento é acrescentar uma entrada em `lib/segments/config.ts` e a chave correspondente em `segmentoEnum` (`lib/agent/schema.ts`), `PERSONAS` (`lib/agent/prompt.ts`) e `PUBLICO_POR_SEGMENTO` (`lib/agent/config.ts`). Nenhum componente muda.
+
+Isso vale enquanto o público for o mesmo. `/agro` foi o primeiro segmento a falar com **produtor rural, PF ou PJ**, e três premissas do código B2B tiveram que virar configuração: o agente PJ recusava pessoa física, o score derrubava lead sem CNPJ, e a urgência era o vencimento da apólice — no agro é a janela de plantio. Quem entra por `PUBLICO_POR_SEGMENTO` herda esse tratamento; é por ali que `/cpf` deve entrar.
 
 ## Configuração
 

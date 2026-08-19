@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import type { Segmento } from '@/lib/agent/schema';
-import { MX_SITE } from '@/lib/segments/config';
+import { MX_SITE, SEGMENTOS } from '@/lib/segments/config';
 
 const VENCIMENTOS = [
   ['ate_30_dias', 'Este mês'],
@@ -14,6 +14,12 @@ const VENCIMENTOS = [
 export function FormularioFallback({ segmento }: { segmento: Segmento }) {
   const [estado, setEstado] = useState<'aberto' | 'enviando' | 'ok' | 'erro'>('aberto');
   const [protocolo, setProtocolo] = useState('');
+  // Produtor rural não tem "empresa" — pedir isso no rótulo faz a pessoa travar
+  // ou inventar. O campo continua o mesmo, só o que se pede muda.
+  const org = SEGMENTOS[segmento].rotuloEmpresa ?? {
+    label: 'Empresa ou condomínio',
+    placeholder: 'Nome do negócio',
+  };
 
   async function enviar(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -53,18 +59,18 @@ export function FormularioFallback({ segmento }: { segmento: Segmento }) {
 
   if (estado === 'ok') {
     return (
-      <div className="rounded-2xl border border-sage/25 bg-navy-2 p-8">
-        <p className="font-display text-xl font-semibold text-[#EDEDE6]">
+      <div className="rounded-2xl border border-brand-accent/25 bg-brand-2 p-8">
+        <p className="font-display text-xl font-semibold text-brand-fg">
           Recebido. Um corretor da MX vai te procurar.
         </p>
-        <p className="mt-3 text-sm text-[#A8B2BF]">
+        <p className="mt-3 text-sm text-brand-fg-mid">
           {protocolo && (
             <>
-              Protocolo <b className="font-mono text-sage">{protocolo}</b>.{' '}
+              Protocolo <b className="font-mono text-brand-accent">{protocolo}</b>.{' '}
             </>
           )}
           Se preferir não esperar, ligue para{' '}
-          <a href={`tel:${MX_SITE.telefoneLink}`} className="font-semibold text-sage">
+          <a href={`tel:${MX_SITE.telefoneLink}`} className="font-semibold text-brand-accent">
             {MX_SITE.telefone}
           </a>
           .
@@ -74,7 +80,7 @@ export function FormularioFallback({ segmento }: { segmento: Segmento }) {
   }
 
   return (
-    <form onSubmit={enviar} className="flex flex-col gap-4 rounded-2xl border border-sage/25 bg-navy-2 p-6">
+    <form onSubmit={enviar} className="flex flex-col gap-4 rounded-2xl border border-brand-accent/25 bg-brand-2 p-6">
       {/* Honeypot: fora da ordem de tabulação e invisível para leitor de tela. */}
       <input
         type="text"
@@ -86,30 +92,30 @@ export function FormularioFallback({ segmento }: { segmento: Segmento }) {
       />
 
       <Campo id="nome" rotulo="Seu nome" placeholder="Como podemos te chamar" />
-      <Campo id="empresa" rotulo="Empresa ou condomínio" placeholder="Nome do negócio" />
+      <Campo id="empresa" rotulo={org.label} placeholder={org.placeholder} />
       <Campo id="whatsapp" rotulo="WhatsApp" type="tel" placeholder="(19) 90000-0000" inputMode="tel" />
       <Campo id="email" rotulo="E-mail (opcional)" type="email" placeholder="voce@empresa.com.br" obrigatorio={false} />
 
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="vencimento" className="font-mono text-[0.64rem] tracking-[0.11em] text-[#A8B2BF] uppercase">
+        <label htmlFor="vencimento" className="font-mono text-[0.64rem] tracking-[0.11em] text-brand-fg-mid uppercase">
           Quando vence seu seguro atual
         </label>
         <select
           id="vencimento"
           name="vencimento"
           defaultValue="ate_90_dias"
-          className="min-h-11 rounded-lg border border-sage/30 bg-white/5 px-3 py-2.5 text-[0.94rem] text-[#EDEDE6]"
+          className="min-h-11 rounded-lg border border-brand-accent/30 bg-white/5 px-3 py-2.5 text-[0.94rem] text-brand-fg"
         >
           {VENCIMENTOS.map(([v, t]) => (
-            <option key={v} value={v} className="bg-navy">
+            <option key={v} value={v} className="bg-brand">
               {t}
             </option>
           ))}
         </select>
       </div>
 
-      <label className="flex items-start gap-2.5 py-1 text-[0.78rem] leading-relaxed text-[#A8B2BF]">
-        <input type="checkbox" name="lgpd" required className="size-6 shrink-0 accent-sage" />
+      <label className="flex items-start gap-2.5 py-1 text-[0.78rem] leading-relaxed text-brand-fg-mid">
+        <input type="checkbox" name="lgpd" required className="size-6 shrink-0 accent-brand-accent" />
         <span>
           Autorizo a MX Seguros a usar meus dados para preparar a cotação e entrar em contato,
           conforme a LGPD.
@@ -129,7 +135,7 @@ export function FormularioFallback({ segmento }: { segmento: Segmento }) {
       <button
         type="submit"
         disabled={estado === 'enviando'}
-        className="min-h-12 rounded-lg bg-sage px-4 font-semibold text-navy transition disabled:opacity-50"
+        className="min-h-12 rounded-lg bg-brand-accent px-4 font-semibold text-brand transition disabled:opacity-50"
       >
         {estado === 'enviando' ? 'Enviando…' : 'Quero ser procurado'}
       </button>
@@ -145,7 +151,7 @@ function Campo({
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="font-mono text-[0.64rem] tracking-[0.11em] text-[#A8B2BF] uppercase">
+      <label htmlFor={id} className="font-mono text-[0.64rem] tracking-[0.11em] text-brand-fg-mid uppercase">
         {rotulo}
       </label>
       <input
@@ -156,7 +162,7 @@ function Campo({
         placeholder={placeholder}
         required={obrigatorio}
         autoComplete={id === 'whatsapp' ? 'tel' : id === 'email' ? 'email' : id === 'nome' ? 'name' : 'organization'}
-        className="min-h-11 rounded-lg border border-sage/30 bg-white/5 px-3 py-2.5 text-[0.94rem] text-[#EDEDE6] placeholder:text-[#5F6C7C]"
+        className="min-h-11 rounded-lg border border-brand-accent/30 bg-white/5 px-3 py-2.5 text-[0.94rem] text-brand-fg placeholder:text-brand-placeholder"
       />
     </div>
   );

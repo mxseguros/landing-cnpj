@@ -11,7 +11,7 @@ import { z } from 'zod';
  * e o contato. Campo obrigatório aqui viraria interrogatório na conversa.
  */
 
-export const segmentoEnum = z.enum(['empresas', 'condominio', 'frota']);
+export const segmentoEnum = z.enum(['empresas', 'condominio', 'frota', 'agro']);
 export type Segmento = z.infer<typeof segmentoEnum>;
 
 export const papelEnum = z.enum([
@@ -22,6 +22,11 @@ export const papelEnum = z.enum([
   'administradora',
   'gestor',
   'conselho',
+  // Agro: quem responde pela propriedade nem sempre é dono dela, e arrendatário
+  // decide a contratação do mesmo jeito — a lavoura em pé é dele.
+  'produtor',
+  'arrendatario',
+  'gestor_rural',
   'outro',
 ]);
 
@@ -39,6 +44,22 @@ export const vencimentoEnum = z.enum([
   'mais_de_90_dias',
   'nao_tem_seguro',
   'nao_sabe',
+]);
+
+/**
+ * Agro: o relógio que importa não é o da apólice, é o do plantio.
+ *
+ * Seguro de lavoura em geral exige contratação antes da semeadura ou da emergência
+ * da cultura, e o prazo muda por cultura e por seguradora. Por isso `ja_plantei`
+ * não é "urgente" — é o oposto: a janela provavelmente fechou, e o que sobra são
+ * benfeitorias, máquinas, rebanho e vida.
+ */
+export const janelaPlantioEnum = z.enum([
+  'ja_plantei',
+  'ate_30_dias',
+  'ate_90_dias',
+  'mais_de_90_dias',
+  'nao_se_aplica',
 ]);
 
 export const leadSchema = z.object({
@@ -69,6 +90,17 @@ export const leadSchema = z.object({
   veiculos: z.number().int().nonnegative().optional().describe('Frota: número de veículos'),
   faturamentoAteDezMilhoes: z.boolean().optional(),
   ehIndustria: z.boolean().optional(),
+
+  // --- agro ---
+  cultura: z.string().optional().describe('Agro: cultura ou criação em linguagem natural, ex.: "café", "cana", "milho safrinha", "gado de corte"'),
+  hectares: z.number().nonnegative().optional().describe('Agro: área da propriedade em hectares'),
+  janelaPlantio: janelaPlantioEnum
+    .optional()
+    .describe('Agro: quando planta a próxima safra — é o campo que mais pesa no roteamento deste segmento'),
+  temCreditoRural: z
+    .boolean()
+    .optional()
+    .describe('Agro: tem custeio, financiamento ou CPR em aberto — costuma vir junto de exigência de apólice pelo banco'),
 
   // --- contato (doc §5.6) ---
   whatsapp: z.string().optional(),

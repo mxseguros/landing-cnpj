@@ -27,3 +27,10 @@ Thumbs.db
 *.log
 
 .vercel
+
+# --- Originais e temporários de escritório ---
+# Foto original enviada pela MX (15 MB). O que o site usa é o recorte em
+# public/hero/agro-lavoura-irrigada.jpg; o original fica no disco, fora do git.
+/agriculture-healthy-food.jpg
+# Arquivos de lock do Office, criados enquanto um .docx/.pptx está aberto.
+~$*

@@ -3,24 +3,39 @@ import type { Segmento } from '@/lib/agent/schema';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { SEGMENTOS, SLUGS, ehSegmento, fundosHero, MX_SITE, SEGURADORAS } from '@/lib/segments/config';
+import {
+  SEGMENTOS, SLUGS, ehSegmento, fundosHero, MX_SITE, SEGURADORAS,
+  type ConfigSegmento,
+} from '@/lib/segments/config';
 import { HeroFundo, ControlesFundo } from '@/components/hero-fundo';
 import { ChatQualificacao } from '@/components/chat/chat-qualificacao';
 import { FormularioFallback } from '@/components/chat/formulario-fallback';
+import { SolicitacaoOrcamento } from '@/components/orcamento/solicitacao-orcamento';
 import { AlternadorTema } from '@/components/alternador-tema';
+import { cidadesDoSegmento } from '@/lib/agent/config';
 
-/** Menu igual ao do protótipo: âncoras das seções da própria página. */
-const SECOES: [string, string][] = [
-  ['#conversa', 'Conversar'],
-  ['#cenario', 'Cenário'],
-  ['#como', 'Como funciona'],
-  ['#coberturas', 'Coberturas'],
-  ['#duvidas', 'Dúvidas'],
-];
+/**
+ * Menu igual ao do protótipo: âncoras das seções da própria página.
+ *
+ * Sai do config e não de uma constante porque nem toda página tem as mesmas
+ * seções — o agro ganha a de orçamento, e uma âncora para uma seção que não foi
+ * renderizada levaria o visitante ao rodapé.
+ */
+function secoes(c: ConfigSegmento): [string, string][] {
+  return [
+    ['#conversa', 'Conversar'],
+    ['#cenario', 'Cenário'],
+    ['#como', 'Como funciona'],
+    ['#coberturas', 'Coberturas'],
+    ['#duvidas', 'Dúvidas'],
+    ...(c.orcamento ? ([['#orcamento', c.orcamento.rotulo]] as [string, string][]) : []),
+  ];
+}
 
 /** Abre o WhatsApp da MX já dizendo de qual página o visitante veio. */
-function linkWhatsApp(deOndeVeio: string): string {
-  const texto = `Olá! Vim pela página de ${deOndeVeio} do site e queria falar sobre seguro para a minha empresa.`;
+function linkWhatsApp(c: ConfigSegmento): string {
+  const assunto = c.assuntoWhatsApp ?? 'seguro para a minha empresa';
+  const texto = `Olá! Vim pela página de ${c.nav} do site e queria falar sobre ${assunto}.`;
   const numero = MX_SITE.telefoneLink.replace(/[^0-9]/g, '');
   return `https://wa.me/${numero}?text=${encodeURIComponent(texto)}`;
 }
@@ -57,13 +72,20 @@ export default async function PaginaSegmento({ params }: Props) {
   const c = SEGMENTOS[segmento];
 
   return (
-    <>
+    // O segmento vira atributo para a folha de estilo poder repintar a camada de
+    // marca sem que nenhum componente saiba de cor: `/agro` troca o marinho pelo
+    // verde só redefinindo variáveis em app/globals.css.
+    //
+    // O `bg-bg` não é decorativo: as seções de coberturas e dúvidas não têm fundo
+    // próprio e cairiam no `body`, que está fora deste elemento e portanto não
+    // enxerga o --bg do segmento.
+    <div data-segmento={c.slug} className="bg-bg">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd(c.meta.description)) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd(c.meta.description, c.slug)) }}
       />
 
-      <header className="sticky top-0 z-50 border-b border-white/10 bg-navy">
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-brand">
         {/* Espaçamento apertado no mobile de propósito: logo + WhatsApp +
             alternador não cabem em 390px com o gap do desktop. */}
         <div className="mx-auto flex h-[70px] max-w-6xl items-center gap-3 px-4 lg:gap-5 lg:px-5">
@@ -72,23 +94,23 @@ export default async function PaginaSegmento({ params }: Props) {
           </Link>
 
           <nav className="ml-auto hidden gap-6 lg:flex">
-            {SECOES.map(([href, rotulo]) => (
+            {secoes(c).map(([href, rotulo]) => (
               <a
                 key={href}
                 href={href}
-                className="border-b border-transparent py-1 text-sm text-[#A8B2BF] transition hover:border-sage hover:text-sage"
+                className="border-b border-transparent py-1 text-sm text-brand-fg-mid transition hover:border-brand-accent hover:text-brand-accent"
               >
                 {rotulo}
               </a>
             ))}
           </nav>
 
-          <a href={`tel:${MX_SITE.telefoneLink}`} className="hidden text-sm font-semibold text-sage lg:block">
+          <a href={`tel:${MX_SITE.telefoneLink}`} className="hidden text-sm font-semibold text-brand-accent lg:block">
             {MX_SITE.telefone}
           </a>
 
           <a
-            href={linkWhatsApp(SEGMENTOS[segmento].nav)}
+            href={linkWhatsApp(c)}
             target="_blank"
             rel="noopener noreferrer"
             className="ml-auto inline-flex min-h-11 items-center gap-2 rounded-lg bg-whats px-3.5 text-sm font-semibold text-[#04231A] lg:ml-0"
@@ -105,10 +127,10 @@ export default async function PaginaSegmento({ params }: Props) {
 
       <main>
         {/* ---------- HERO ---------- */}
-        <section id="conversa" className="relative isolate overflow-hidden bg-navy">
+        <section id="conversa" className="relative isolate overflow-hidden bg-brand">
           <HeroFundo fotos={fundosHero(c.slug)}>
             <div className="relative mx-auto grid max-w-6xl gap-7 px-5 py-9 lg:grid-cols-[1.02fr_.98fr] lg:items-center lg:gap-10 lg:py-20">
-              <div className="max-w-[58ch] text-[#EDEDE6]">
+              <div className="max-w-[58ch] text-brand-fg">
                 <span className="inline-flex items-center gap-2 rounded-full border border-[#D98324]/45 bg-[#D98324]/15 px-3 py-1.5 font-mono text-[0.68rem] tracking-[0.1em] text-[#F0B372] uppercase">
                   <span className="size-1.5 rounded-full bg-[#D98324]" />
                   {c.urgencia}
@@ -116,9 +138,9 @@ export default async function PaginaSegmento({ params }: Props) {
                 <h1 className="mt-4 text-[clamp(1.85rem,1.15rem+3.4vw,3.5rem)] leading-[1.1] font-semibold">
                   {c.titulo}
                 </h1>
-                <p className="mt-3 max-w-[52ch] text-[0.98rem] text-[#C6CFDA] lg:text-lg">{c.subtitulo}</p>
-                <Prazo />
-                <ul className="mt-6 hidden flex-wrap gap-2 border-t border-sage/20 pt-5 lg:flex">
+                <p className="mt-3 max-w-[52ch] text-[0.98rem] text-brand-fg-soft lg:text-lg">{c.subtitulo}</p>
+                <Prazo template={c.prazo} />
+                <ul className="mt-6 hidden flex-wrap gap-2 border-t border-brand-accent/20 pt-5 lg:flex">
                   {[
                     ['No mercado desde', String(MX_SITE.desde)],
                     ['Cotamos em', `${SEGURADORAS.length} seguradoras`],
@@ -126,9 +148,9 @@ export default async function PaginaSegmento({ params }: Props) {
                   ].map(([k, v]) => (
                     <li
                       key={k}
-                      className="rounded-full border border-sage/20 bg-sage/10 px-3 py-1.5 text-xs text-[#A8B2BF]"
+                      className="rounded-full border border-brand-accent/20 bg-brand-accent/10 px-3 py-1.5 text-xs text-brand-fg-mid"
                     >
-                      {k} <b className="font-semibold text-sage">{v}</b>
+                      {k} <b className="font-semibold text-brand-accent">{v}</b>
                     </li>
                   ))}
                 </ul>
@@ -149,7 +171,7 @@ export default async function PaginaSegmento({ params }: Props) {
               {SEGURADORAS.map((s) => (
                 <li
                   key={s.slug}
-                  className="grid h-14 shrink-0 basis-[104px] place-items-center rounded-lg border border-navy/10 bg-white px-3 md:flex-1 md:basis-0"
+                  className="grid h-14 shrink-0 basis-[104px] place-items-center rounded-lg border border-brand/10 bg-white px-3 md:flex-1 md:basis-0"
                 >
                   <Image
                     src={`/seguradoras/${s.slug}.png`}
@@ -194,7 +216,7 @@ export default async function PaginaSegmento({ params }: Props) {
         </section>
 
         {/* ---------- COMO FUNCIONA ---------- */}
-        <section id="como" className="bg-navy py-16 text-[#EDEDE6] md:py-24">
+        <section id="como" className="bg-brand py-16 text-brand-fg md:py-24">
           <div className="mx-auto max-w-6xl px-5">
             <Cabecalho
               eyebrow="Como funciona"
@@ -203,16 +225,16 @@ export default async function PaginaSegmento({ params }: Props) {
             />
             <ol className="grid gap-8 sm:grid-cols-3">
               {[
-                ['Você conversa', 'Seis perguntas objetivas sobre o seu negócio, o seguro atual e quando ele vence. Sem cadastro para começar.'],
-                ['A gente organiza', 'O sistema monta o perfil de risco e encaminha ao corretor certo da célula B2B, com prioridade por urgência.'],
+                ['Você conversa', 'Seis perguntas objetivas sobre o que você precisa proteger, o seguro atual e o prazo que está correndo. Sem cadastro para começar.'],
+                ['A gente organiza', 'O sistema monta o perfil de risco e encaminha ao corretor certo da equipe, com prioridade por urgência.'],
                 ['Um corretor te chama', 'Uma pessoa da MX entra em contato no WhatsApp já sabendo do que você precisa. Você não repete nada.'],
               ].map(([t, d], i) => (
-                <li key={t} className="border-t-2 border-sage pt-5">
-                  <span className="font-mono text-xs tracking-[0.1em] text-sage">
+                <li key={t} className="border-t-2 border-brand-accent pt-5">
+                  <span className="font-mono text-xs tracking-[0.1em] text-brand-accent">
                     {String(i + 1).padStart(2, '0')}
                   </span>
                   <h3 className="mt-2 text-[1.1rem] font-semibold">{t}</h3>
-                  <p className="mt-2 text-[0.92rem] text-[#A8B2BF]">{d}</p>
+                  <p className="mt-2 text-[0.92rem] text-brand-fg-mid">{d}</p>
                 </li>
               ))}
             </ol>
@@ -233,7 +255,7 @@ export default async function PaginaSegmento({ params }: Props) {
                   key={x}
                   className="inline-flex items-center gap-2 rounded-lg border border-rule bg-surface px-4 py-2.5 text-[0.9rem]"
                 >
-                  <span className="size-1.5 rounded-full bg-sage" />
+                  <span className="size-1.5 rounded-full bg-brand-accent" />
                   {x}
                 </li>
               ))}
@@ -269,7 +291,7 @@ export default async function PaginaSegmento({ params }: Props) {
           <div className="mx-auto max-w-6xl px-5">
             <Cabecalho eyebrow="Dúvidas" titulo="O que costumam perguntar antes de começar" />
             <div className="flex max-w-3xl flex-col gap-2">
-              {FAQ.map(([q, a]) => (
+              {(c.faq ?? FAQ).map(([q, a]) => (
                 <details
                   key={q}
                   className="rounded-xl border border-rule bg-surface px-5 py-4 open:border-accent"
@@ -284,8 +306,45 @@ export default async function PaginaSegmento({ params }: Props) {
             </div>
           </div>
         </section>
+        {/* ---------- ORÇAMENTO ---------- */}
+        {/* Fecha a página, no lugar que era do formulário de contato. Vem depois
+            do FAQ de propósito: as últimas objeções já foram respondidas, e é aí
+            que se pede a ação. */}
+        {c.orcamento && (
+          <section
+            id="orcamento"
+            className="border-t border-brand-accent/20 bg-brand py-16 text-brand-fg md:py-24"
+          >
+            <div className="mx-auto max-w-6xl px-5">
+              <Cabecalho
+                eyebrow={c.orcamento.rotulo}
+                titulo={c.orcamento.titulo}
+                lede={c.orcamento.lede}
+                escuro
+              />
+              {/* O telefone vinha com o formulário de contato. Sem ele aqui, a
+                  página perderia a saída de quem não quer preencher nada. */}
+              <p className="mb-8 text-[0.9rem] text-brand-fg-mid">
+                Prefere falar com alguém? Ligue direto:{' '}
+                <a
+                  href={`tel:${MX_SITE.telefoneLink}`}
+                  className="inline-flex min-h-11 items-center font-semibold text-brand-accent"
+                >
+                  {MX_SITE.telefone}
+                </a>
+              </p>
+              <SolicitacaoOrcamento />
+            </div>
+          </section>
+        )}
+
         {/* ---------- FALLBACK ---------- */}
-        <section className="border-t border-sage/20 bg-navy py-16 text-[#EDEDE6] md:py-24">
+        {/* Só onde não existe a seção de orçamento. Dois formulários na mesma
+            página disputam a mesma decisão e fazem o visitante escolher entre
+            eles em vez de preencher um: quem tem o de orçamento não precisa
+            deste, que pede menos e chega ao corretor com menos. */}
+        {!c.orcamento && (
+        <section className="border-t border-brand-accent/20 bg-brand py-16 text-brand-fg md:py-24">
           <div className="mx-auto grid max-w-6xl gap-9 px-5 lg:grid-cols-2 lg:items-start">
             <div>
               <Cabecalho
@@ -294,11 +353,11 @@ export default async function PaginaSegmento({ params }: Props) {
                 lede="Nem todo mundo quer responder perguntas na tela — e tudo bem. Este formulário chega no mesmo lugar que a conversa, só sem a qualificação pronta."
                 escuro
               />
-              <p className="text-[0.9rem] text-[#A8B2BF]">
+              <p className="text-[0.9rem] text-brand-fg-mid">
                 Ou ligue direto:{' '}
                 <a
                   href={`tel:${MX_SITE.telefoneLink}`}
-                  className="inline-flex min-h-11 items-center font-semibold text-sage"
+                  className="inline-flex min-h-11 items-center font-semibold text-brand-accent"
                 >
                   {MX_SITE.telefone}
                 </a>
@@ -307,22 +366,42 @@ export default async function PaginaSegmento({ params }: Props) {
             <FormularioFallback segmento={c.slug} />
           </div>
         </section>
+        )}
       </main>
 
       <Rodape segmentoAtual={c.slug} />
-    </>
+    </div>
   );
 }
 
-function Prazo() {
+const PRAZO_PADRAO =
+  'Estamos em {mes}. Apólice que vence em {proximo} precisa entrar em cotação agora — ' +
+  'comparar seguradoras leva alguns dias úteis.';
+
+/**
+ * O bloco de prazo do hero cita o mês corrente, e o que torna a data urgente muda
+ * por segmento: nas páginas B2B é o vencimento da apólice, no agro é a semeadura.
+ * O template vem do config como texto puro, com `{mes}` e `{proximo}` destacados aqui
+ * — assim a config continua sendo dado, sem JSX.
+ */
+function Prazo({ template }: { template?: string }) {
   const M = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
   const agora = new Date();
   const prox = new Date(agora.getFullYear(), agora.getMonth() + 1, 1);
+  const meses: Record<string, string> = {
+    '{mes}': M[agora.getMonth()],
+    '{proximo}': M[prox.getMonth()],
+  };
+  const partes = (template ?? PRAZO_PADRAO).split(/(\{mes\}|\{proximo\})/g);
   return (
-    <p className="mt-4 text-sm text-[#93A1B1]">
-      Estamos em <b className="font-semibold text-sage">{M[agora.getMonth()]}</b>. Apólice que
-      vence em <b className="font-semibold text-sage">{M[prox.getMonth()]}</b> precisa entrar em
-      cotação agora — comparar seguradoras leva alguns dias úteis.
+    <p className="mt-4 text-sm text-brand-fg-faint">
+      {partes.map((p, i) =>
+        meses[p] ? (
+          <b key={i} className="font-semibold text-brand-accent">{meses[p]}</b>
+        ) : (
+          p
+        ),
+      )}
     </p>
   );
 }
@@ -332,18 +411,18 @@ function Cabecalho({
 }: { eyebrow: string; titulo: string; lede?: string; escuro?: boolean }) {
   return (
     <div className="mb-10 flex max-w-[60ch] flex-col gap-3">
-      <p className={`font-mono text-[0.68rem] tracking-[0.16em] uppercase ${escuro ? 'text-sage' : 'text-accent'}`}>
+      <p className={`font-mono text-[0.68rem] tracking-[0.16em] uppercase ${escuro ? 'text-brand-accent' : 'text-accent'}`}>
         {eyebrow}
       </p>
       <h2 className="text-[clamp(1.7rem,1.1rem+1.9vw,2.5rem)] leading-tight font-semibold">{titulo}</h2>
-      {lede && <p className={`text-[1.06rem] ${escuro ? 'text-[#A8B2BF]' : 'text-ink-mid'}`}>{lede}</p>}
+      {lede && <p className={`text-[1.06rem] ${escuro ? 'text-brand-fg-mid' : 'text-ink-mid'}`}>{lede}</p>}
     </div>
   );
 }
 
 function Rodape({ segmentoAtual }: { segmentoAtual: Segmento }) {
   return (
-    <footer className="border-t border-sage/20 bg-navy py-12 text-[#A8B2BF]">
+    <footer className="border-t border-brand-accent/20 bg-brand py-12 text-brand-fg-mid">
       <div className="mx-auto max-w-6xl px-5">
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           <div>
@@ -356,8 +435,8 @@ function Rodape({ segmentoAtual }: { segmentoAtual: Segmento }) {
                   <Link
                     href={`/${s}`}
                     aria-current={s === segmentoAtual ? 'page' : undefined}
-                    className={`inline-flex min-h-11 items-center transition hover:text-sage ${
-                      s === segmentoAtual ? 'font-semibold text-sage' : ''
+                    className={`inline-flex min-h-11 items-center transition hover:text-brand-accent ${
+                      s === segmentoAtual ? 'font-semibold text-brand-accent' : ''
                     }`}
                   >
                     {SEGMENTOS[s].nav}
@@ -367,7 +446,7 @@ function Rodape({ segmentoAtual }: { segmentoAtual: Segmento }) {
             </ul>
           </div>
           <div className="text-[0.86rem]">
-            <h3 className="mb-2 font-mono text-[0.64rem] tracking-[0.13em] text-sage uppercase">Matriz</h3>
+            <h3 className="mb-2 font-mono text-[0.64rem] tracking-[0.13em] text-brand-accent uppercase">Matriz</h3>
             <address className="leading-relaxed not-italic">
               {MX_SITE.matriz.rua}<br />
               {MX_SITE.matriz.bairro} · {MX_SITE.matriz.cidade}/{MX_SITE.matriz.uf}<br />
@@ -375,14 +454,14 @@ function Rodape({ segmentoAtual }: { segmentoAtual: Segmento }) {
             </address>
           </div>
           <div className="text-[0.86rem]">
-            <h3 className="mb-2 font-mono text-[0.64rem] tracking-[0.13em] text-sage uppercase">Filial</h3>
+            <h3 className="mb-2 font-mono text-[0.64rem] tracking-[0.13em] text-brand-accent uppercase">Filial</h3>
             <address className="leading-relaxed not-italic">
               {MX_SITE.filial.rua}<br />
               {MX_SITE.filial.bairro} · {MX_SITE.filial.cidade}/{MX_SITE.filial.uf}
             </address>
           </div>
           <div className="text-[0.86rem]">
-            <h3 className="mb-2 font-mono text-[0.64rem] tracking-[0.13em] text-sage uppercase">Contato</h3>
+            <h3 className="mb-2 font-mono text-[0.64rem] tracking-[0.13em] text-brand-accent uppercase">Contato</h3>
             <address className="leading-relaxed not-italic">
               <a href={`tel:${MX_SITE.telefoneLink}`} className="inline-flex min-h-11 items-center">
                 {MX_SITE.telefone}
@@ -394,7 +473,7 @@ function Rodape({ segmentoAtual }: { segmentoAtual: Segmento }) {
             </address>
           </div>
         </div>
-        <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-sage/15 pt-5 text-xs">
+        <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-brand-accent/15 pt-5 text-xs">
           <span>{MX_SITE.nome} · desde {MX_SITE.desde}</span>
           <span>CNPJ {MX_SITE.cnpj ?? <Pendente />}</span>
           <span>Registro SUSEP {MX_SITE.susep ?? <Pendente />}</span>
@@ -407,7 +486,7 @@ function Rodape({ segmentoAtual }: { segmentoAtual: Segmento }) {
 /** Marcador visível de propositalmente-faltando — some quando a MX enviar o dado. */
 function Pendente() {
   return (
-    <b className="rounded bg-sage px-1.5 font-mono text-[0.66rem] font-bold text-navy">PENDENTE</b>
+    <b className="rounded bg-brand-accent px-1.5 font-mono text-[0.66rem] font-bold text-brand">PENDENTE</b>
   );
 }
 
@@ -420,7 +499,7 @@ const FAQ: [string, string][] = [
   ['Já tenho corretor. Vale conversar?', 'Vale se a sua apólice está perto de vencer. A comparação é gratuita e sem compromisso — se a cobertura que você já tem for melhor, a gente vai te dizer isso.'],
 ];
 
-function jsonLd(description: string) {
+function jsonLd(description: string, segmento: Segmento) {
   return {
     '@context': 'https://schema.org',
     '@type': 'InsuranceAgency',
@@ -429,10 +508,9 @@ function jsonLd(description: string) {
     telephone: MX_SITE.telefone,
     email: MX_SITE.email,
     foundingDate: String(MX_SITE.desde),
-    areaServed: [
-      'Itapira', 'Mogi Guaçu', 'Mogi Mirim',
-      'Espírito Santo do Pinhal', 'Lindóia', 'Águas de Lindoia',
-    ],
+    // O agro atende um raio maior que as páginas B2B; a lista sai do mesmo lugar
+    // que o motor de score usa, para as duas não divergirem.
+    areaServed: [...cidadesDoSegmento(segmento)],
     address: {
       '@type': 'PostalAddress',
       streetAddress: MX_SITE.matriz.rua,

@@ -38,11 +38,12 @@ export async function POST(req: Request) {
 
   // Sem isto o lead não tem ramo nenhum e o motor de score o classifica como
   // "sem ramo que justifique prioridade" — o segmento da página já diz qual é.
-  const RAMO_DO_SEGMENTO = {
+  const RAMO_DO_SEGMENTO: Record<typeof d.segmento, string> = {
     empresas: 'patrimonial',
     condominio: 'condominial',
     frota: 'frota',
-  } as const;
+    agro: 'agricola',
+  };
 
   const lead: Lead = {
     nome: d.nome,

@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import type { Segmento } from '@/lib/agent/schema';
-import { MX_SITE } from '@/lib/segments/config';
+import { MX_SITE, SEGMENTOS } from '@/lib/segments/config';
 
 /**
  * Widget de qualificação — o único componente client da página.
@@ -72,12 +72,12 @@ export function ChatQualificacao({ segmento }: { segmento: Segmento }) {
   return (
     <div className="flex flex-col overflow-hidden rounded-2xl border border-rule bg-surface shadow-[0_24px_60px_-28px_rgba(0,0,0,.45)] lg:min-h-[498px]">
       <header className="flex items-center gap-3 border-b border-rule bg-surface-2 px-4 py-3">
-        <span className="relative grid size-9 shrink-0 place-items-center rounded-full bg-navy">
+        <span className="relative grid size-9 shrink-0 place-items-center rounded-full bg-brand">
           <span className="font-display text-sm font-semibold text-white">MX</span>
           <span className="absolute -right-px -bottom-px size-2.5 rounded-full border-2 border-surface-2 bg-whats" />
         </span>
         <div className="leading-tight">
-          <p className="text-sm font-semibold">MX Empresas</p>
+          <p className="text-sm font-semibold">{SEGMENTOS[segmento].agente}</p>
           <p className="text-xs text-ink-faint">
             Assistente digital · um corretor humano assume depois
           </p>
@@ -94,7 +94,7 @@ export function ChatQualificacao({ segmento }: { segmento: Segmento }) {
             <button
               type="button"
               onClick={() => enviar('Olá! Quero entender o que preciso proteger.')}
-              className="mt-4 min-h-11 rounded-lg bg-navy px-4 text-sm font-semibold text-white"
+              className="mt-4 min-h-11 rounded-lg bg-brand px-4 text-sm font-semibold text-white"
             >
               Começar agora
             </button>
@@ -103,10 +103,16 @@ export function ChatQualificacao({ segmento }: { segmento: Segmento }) {
         )}
 
         {messages.map((m) => {
+          // Uma mensagem vira várias partes de texto quando o agente escreve, chama
+          // uma ferramenta e volta a escrever. Juntar com '' cola as duas frases
+          // ("Já registrei aqui.Prontinho."); a quebra devolve o parágrafo que o
+          // modelo pretendia. Texto contíguo continua numa parte só, então isto não
+          // insere quebra onde não havia.
           const texto = m.parts
             .filter((p): p is { type: 'text'; text: string } => p.type === 'text')
-            .map((p) => p.text)
-            .join('');
+            .map((p) => p.text.trim())
+            .filter(Boolean)
+            .join('\n\n');
           if (!texto) return null;
           const meu = m.role === 'user';
           return (
@@ -114,7 +120,7 @@ export function ChatQualificacao({ segmento }: { segmento: Segmento }) {
               key={m.id}
               className={
                 meu
-                  ? 'max-w-[86%] self-end rounded-xl rounded-br-sm bg-navy px-3.5 py-2.5 text-[0.93rem] leading-relaxed text-white'
+                  ? 'max-w-[86%] self-end rounded-xl rounded-br-sm bg-brand px-3.5 py-2.5 text-[0.93rem] leading-relaxed text-white'
                   : 'max-w-[86%] self-start rounded-xl rounded-bl-sm bg-surface-2 px-3.5 py-2.5 text-[0.93rem] leading-relaxed'
               }
             >
@@ -169,7 +175,7 @@ export function ChatQualificacao({ segmento }: { segmento: Segmento }) {
         <button
           type="submit"
           disabled={pensando || !texto.trim()}
-          className="shrink-0 rounded-lg bg-navy px-4 py-2.5 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-40"
+          className="shrink-0 rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-40"
         >
           Enviar
         </button>
