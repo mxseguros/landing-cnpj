@@ -19,7 +19,7 @@ A célula B2B da corretora tem duas pessoas — um *hunter* e um *closer* — pa
 
 ## Estado atual
 
-**No ar em staging:** https://mx-landing-pj.vercel.app → redireciona para `/empresas`
+**No ar em staging:** https://landing-cnpj.vercel.app → redireciona para `/empresas`
 
 Next.js 16 + React 19 + Tailwind v4, três landing pages geradas estaticamente e o agente ligado ao chat. As Fases 1, 2 e 3 estão essencialmente concluídas; a Fase 4 (Postgres, e-mail, LGPD) ainda não começou — `deliverLead()` hoje só escreve no log.
 
@@ -74,6 +74,11 @@ cp .env.example .env.local   # preencha ANTHROPIC_API_KEY
 A chave sai de `platform.claude.com` → Settings → API Keys. Use uma dedicada a este projeto, não a mesma do sistema de DRE — assim dá para revogar uma sem derrubar a outra. **Nunca comite `.env.local`.**
 
 Modelo: `claude-opus-5` via `@ai-sdk/anthropic`, com `reasoning: 'low'`. O motivo do `low` está comentado em [lib/agent/index.ts](lib/agent/index.ts) e não é sobre custo — é que com thinking desligado o modelo às vezes escreve a chamada de ferramenta como texto, e o lead nunca é gravado.
+
+Na Vercel a mesma chave vive em Settings → Environment Variables, marcada em Production. Duas armadilhas já custaram um diagnóstico cada:
+
+- **variável nova ou trocada só vale a partir do próximo deploy.** O deployment no ar carrega o valor que existia quando foi construído; trocar no painel não alcança ele. Depois de mexer, Deployments → `···` → Redeploy.
+- **os dois modos de falha são silenciosos e diferentes.** Sem a variável, `/api/chat` responde `503 {"erro":"agente indisponível"}` — o guard em [app/api/chat/route.ts](app/api/chat/route.ts) falha cedo de propósito. Com a variável presente mas a chave inválida, vem `200` e um stream que começa e morre em `{"type":"error"}`, e o visitante vê a mensagem de "tive um problema para responder agora". Nos dois casos o erro cru está no Runtime Log, na linha `[chat]`.
 
 ## Pendências do cliente
 

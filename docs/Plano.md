@@ -2,7 +2,7 @@
 
 **Cliente:** MX Seguros · Itapira/SP
 **Documento:** plano de execução · revisado em 31 de julho de 2026 contra o que está no ar
-**No ar:** https://mx-landing-pj.vercel.app (staging, `noindex` até o DNS de `mxseguros.com.br`)
+**No ar:** https://landing-cnpj.vercel.app (staging, `noindex` até o DNS de `mxseguros.com.br`)
 **Fontes:** `planejamento.docx` (Plano Comercial B2B) e `MXSeguros_Estrategia_Marketing_B2B.pptx`
 **Documento irmão:** [PRD.md](PRD.md) — requisitos detalhados de produto
 
@@ -119,7 +119,7 @@ O site institucional carrega Lato, Roboto, Roboto Slab e Ubuntu simultaneamente 
 
 ## 6. Fases e checklist
 
-> **Estado em 31/07/2026:** app no ar em https://mx-landing-pj.vercel.app (staging — `noindex` até o DNS de `mxseguros.com.br`). Fases 1 e 2 concluídas, Fase 3 concluída menos anti-abuso, Fase 4 não iniciada. Os itens abaixo só estão marcados quando verificados no código; o que depende de medição em produção (Lighthouse, QA em dispositivo real) segue aberto mesmo quando implementado.
+> **Estado em 31/07/2026:** app no ar em https://landing-cnpj.vercel.app (staging — `noindex` até o DNS de `mxseguros.com.br`). Fases 1 e 2 concluídas, Fase 3 concluída menos anti-abuso, Fase 4 não iniciada. Os itens abaixo só estão marcados quando verificados no código; o que depende de medição em produção (Lighthouse, QA em dispositivo real) segue aberto mesmo quando implementado.
 
 ### Fase 0 — Fundação
 - [x] Ler os documentos comercial e de marketing
@@ -280,7 +280,7 @@ prototipo/index.html             protótipo aprovado — registro histórico, n�
 5. Número de WhatsApp de destino — o (19) 3863-8150 institucional ou um dedicado da célula. **Recomendação: dedicado**, senão não há como medir o funil nem cobrar SLA
 6. Qual CRM a célula vai ativar
 
-**Bloqueiam a indexação** — o deploy em si já está feito e funcionando em https://mx-landing-pj.vercel.app
+**Bloqueiam a indexação** — o deploy em si já está feito e funcionando em https://landing-cnpj.vercel.app
 
 7. Quem administra o WordPress e o DNS, e se as páginas entram como rewrite de subpasta (`mxseguros.com.br/empresas`) ou subdomínio. **Rewrite é melhor para SEO**, mas exige acesso à configuração do servidor.
 8. Política de Privacidade e Termos. Não é só LGPD: o Google Ads recusa a conta sem ela, e o Ads é a fonte de tráfego que justifica o projeto inteiro.

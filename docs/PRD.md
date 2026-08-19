@@ -3,7 +3,7 @@
 **Produto:** captação e qualificação automatizada de leads PJ
 **Cliente:** MX Seguros · Itapira/SP
 **Versão:** 1.1 · 31 de julho de 2026 — revisado contra o que está no ar
-**No ar:** https://mx-landing-pj.vercel.app (staging, `noindex` até o DNS de `mxseguros.com.br`)
+**No ar:** https://landing-cnpj.vercel.app (staging, `noindex` até o DNS de `mxseguros.com.br`)
 **Documento irmão:** [Plano.md](Plano.md) — fases, cronograma e checklist de execução
 
 ---
